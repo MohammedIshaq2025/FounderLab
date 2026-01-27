@@ -6,7 +6,7 @@ import Sidebar from './components/Sidebar';
 import PhaseIndicator from './components/PhaseIndicator';
 import StartScreen from './components/StartScreen';
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8001';
+const API_URL = import.meta.env.VITE_BACKEND_URL || '';
 
 function App() {
   const [projectId, setProjectId] = useState(null);
