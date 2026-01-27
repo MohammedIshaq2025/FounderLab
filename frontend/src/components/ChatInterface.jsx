@@ -77,7 +77,7 @@ function ChatInterface({ messages, onSendMessage, phase }) {
               </div>
               <div
                 className={`text-xs mt-2 ${
-                  message.role === 'user' ? 'text-indigo-100' : 'text-gray-400'
+                  message.role === 'user' ? 'text-white/70' : 'text-gray-400'
                 }`}
               >
                 {new Date(message.created_at).toLocaleTimeString([], {
