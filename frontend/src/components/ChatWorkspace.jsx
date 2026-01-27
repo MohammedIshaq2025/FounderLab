@@ -104,8 +104,11 @@ function ChatWorkspace({ projects, onUpdateProject }) {
         }
       }
 
-      if (response.data.canvas_update) {
-        updateCanvas(response.data.canvas_update);
+      // Handle canvas updates
+      if (response.data.canvas_updates && response.data.canvas_updates.length > 0) {
+        for (const update of response.data.canvas_updates) {
+          await updateCanvas(update);
+        }
       }
 
       await loadProject();
