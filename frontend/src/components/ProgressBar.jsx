@@ -37,13 +37,15 @@ function ProgressBar({ phase, projectName, onPhaseClick }) {
             return (
               <div key={p.number} className="flex flex-col items-center relative">
                 {/* Circle */}
-                <div
+                <button
+                  onClick={() => onPhaseClick && onPhaseClick(p.number)}
+                  disabled={phase < p.number}
                   className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm border-2 transition-all ${
                     isCompleted
-                      ? 'bg-[#5b0e14] border-[#5b0e14] text-white'
+                      ? 'bg-[#5b0e14] border-[#5b0e14] text-white cursor-pointer hover:scale-110'
                       : isCurrent
                       ? 'bg-white border-[#5b0e14] text-[#5b0e14] ring-4 ring-[#5b0e14]/20'
-                      : 'bg-white border-gray-300 text-gray-400'
+                      : 'bg-white border-gray-300 text-gray-400 cursor-not-allowed'
                   }`}
                 >
                   {isCompleted ? (
@@ -51,7 +53,7 @@ function ProgressBar({ phase, projectName, onPhaseClick }) {
                   ) : (
                     <span>{p.number}</span>
                   )}
-                </div>
+                </button>
 
                 {/* Label */}
                 <div className="mt-2 text-center">
