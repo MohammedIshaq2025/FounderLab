@@ -42,34 +42,34 @@ function Dashboard({ projects, onCreateProject, onRefresh }) {
   return (
     <div className="h-screen flex bg-gray-50">
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}>
+      <div className={`${sidebarOpen ? 'w-56' : 'w-16'} bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}>
         {/* Logo */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#5b0e14] rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-xl">F</span>
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-[#5b0e14] rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
+              <span className="text-white font-bold text-sm">F</span>
             </div>
             {sidebarOpen && (
-              <h1 className="text-xl font-bold text-[#5b0e14]">FounderLab</h1>
+              <h1 className="text-sm font-bold text-[#5b0e14]">FounderLab</h1>
             )}
           </div>
         </div>
 
         {/* Navigation */}
-        <div className="flex-1 p-4">
+        <div className="flex-1 p-3">
           <button
             onClick={onRefresh}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-[#5b0e14] text-white hover:bg-[#7a1219] transition ${!sidebarOpen && 'justify-center'}`}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-[#5b0e14] text-white hover:bg-[#7a1219] transition text-sm ${!sidebarOpen && 'justify-center'}`}
           >
-            <FolderOpen className="w-5 h-5" />
-            {sidebarOpen && <span className="font-medium">Projects</span>}
+            <FolderOpen className="w-4 h-4 flex-shrink-0" />
+            {sidebarOpen && <span className="font-medium text-sm">Projects</span>}
           </button>
         </div>
 
         {/* Toggle Sidebar */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-4 border-t border-gray-200 text-gray-500 hover:text-gray-700 text-sm"
+          className="p-3 border-t border-gray-200 text-gray-500 hover:text-gray-700 text-xs hover:bg-gray-50 transition"
         >
           {sidebarOpen ? '←' : '→'}
         </button>
