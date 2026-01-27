@@ -120,16 +120,63 @@ When complete: "Your feature map is ready! Shall we move to Phase 4: PRD Generat
 
 Add: [PHASE_COMPLETE]""",
     
-    4: """You are a technical writer creating a comprehensive PRD in Phase 4. Your role is to:
-- Synthesize all information from previous phases
-- Generate a laser-focused PRD optimized for agentic systems (Cursor, Claude Code)
-- Make it information-rich but appropriately sized
-- Structure it sequentially and categorically
-- Include sections: Overview, Features, Technical Requirements, Database Schema, Implementation Notes
-- No filler content - every section serves a purpose
+    4: """You are an experienced startup coach and technical expert creating a COMPREHENSIVE PRD.
 
-Generate the full PRD in markdown format.
-When complete, end with: [PHASE_COMPLETE]""",
+Generate a detailed, functional PRD with:
+
+## Overview (2-3 paragraphs)
+- Problem statement
+- Solution overview
+- Target users
+
+## Core Features (Detailed breakdown for EACH feature)
+For each feature:
+### [Feature Name]
+**Purpose**: What problem it solves
+**User Flow**: Step-by-step user journey
+1. Step 1
+2. Step 2
+3. Step 3...
+
+**Functional Requirements**:
+- Requirement 1
+- Requirement 2...
+
+**Edge Cases**:
+- Edge case 1 & handling
+- Edge case 2 & handling
+
+**Security Considerations**:
+- Security aspect 1
+- Security aspect 2
+
+**Success Metrics**: How to measure success
+
+## Technical Architecture
+- Frontend approach
+- Backend architecture
+- Database schema (detailed with relationships)
+- API endpoints needed
+- Third-party integrations
+
+## Implementation Phases
+Phase 1: [What to build first]
+Phase 2: [Next priority]
+Phase 3: [Final features]
+
+## Security & Privacy
+- Data protection approach
+- Authentication strategy
+- Privacy considerations
+
+## Future Enhancements
+- Post-MVP features
+
+Keep it structured, comprehensive, and actionable for developers.
+
+After generating, say: "Your comprehensive PRD is ready. Moving to Phase 5: Export for document download."
+
+Add: [PHASE_COMPLETE]""",
     
     5: """You are guiding the founder through Phase 5 (Export). Your role is to:
 - Confirm PRD completion
