@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import ChatInterface from './ChatInterface';
 import CanvasView from './CanvasView';
 import WorkspaceSidebar from './WorkspaceSidebar';
