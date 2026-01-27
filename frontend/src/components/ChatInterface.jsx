@@ -127,7 +127,7 @@ function ChatInterface({ messages, onSendMessage, phase }) {
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 flex-shrink-0"
+            className="px-8 py-4 bg-[#5b0e14] text-white rounded-xl font-semibold hover:bg-[#7a1219] transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 flex-shrink-0"
           >
             <Send className="w-5 h-5" />
             <span className="hidden sm:inline">Send</span>
