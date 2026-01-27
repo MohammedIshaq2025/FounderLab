@@ -1,0 +1,422 @@
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from pydantic import BaseModel
+from typing import List, Optional, Dict, Any
+import os
+from dotenv import load_dotenv
+from supabase import create_client, Client
+from openai import OpenAI
+from tavily import TavilyClient
+import json
+import uuid
+from datetime import datetime
+import markdown
+from weasyprint import HTML
+from io import BytesIO
+import asyncio
+
+# Load environment variables
+load_dotenv()
+
+app = FastAPI()
+
+# CORS configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Initialize clients
+supabase: Client = create_client(
+    os.environ.get("SUPABASE_PROJECT_URL"),
+    os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+)
+openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+tavily_client = TavilyClient(api_key=os.environ.get("TAVILY_API_KEY"))
+
+# Pydantic models
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    project_id: str
+    message: str
+    phase: int
+
+class ProjectCreate(BaseModel):
+    name: str
+
+class NodeUpdate(BaseModel):
+    project_id: str
+    nodes: List[Dict[str, Any]]
+    edges: List[Dict[str, Any]]
+
+class DocumentRequest(BaseModel):
+    project_id: str
+    doc_type: str  # 'features', 'tech_stack', 'prd'
+
+# Phase prompts
+PHASE_PROMPTS = {
+    1: """You are a seasoned startup coach helping a founder refine their idea. Your role in Phase 1 (Ideation) is to:
+- Ask probing questions about the problem they're solving
+- Understand who experiences this pain point
+- Explore how people currently deal with this problem
+- Help them articulate their proposed solution
+- Challenge assumptions constructively
+- Summarize key insights before transitioning
+
+Be direct, supportive, and guide the conversation to clarity. Ask 1-2 questions at a time, don't overwhelm.
+When you feel the idea is well-defined, end your response with: [PHASE_COMPLETE]""",
+    
+    2: """You are a seasoned startup coach in Phase 2 (Research). You have context from ideation. Your role is to:
+- Ask what features the founder has in mind
+- For each feature mentioned, conduct competitor research using web search
+- Indicate novelty and differentiation
+- Explore functionality depth through questions
+- Guide them to define 2-4 core features with sub-features
+- Identify conflicts between features and raise them proactively
+- Research feasibility when needed (check if APIs exist for niche requirements)
+- Suggest complementary non-core features (auth, user management, etc.)
+
+Think holistically across features. Use web search to validate and research. When requesting canvas updates, use the format:
+[UPDATE_CANVAS]
+{
+  "action": "add_node",
+  "node": {
+    "id": "unique-id",
+    "type": "feature/ideation",
+    "data": {"label": "Feature Name", "description": "Brief description"},
+    "parentId": "root" or "parent-feature-id"
+  }
+}
+[/UPDATE_CANVAS]
+
+When research is complete and canvas is populated, end with: [PHASE_COMPLETE]""",
+    
+    3: """You are a seasoned startup coach in Phase 3 (Tech Stack & Database). Your role is to:
+- Analyze all defined features and requirements
+- Recommend optimal tech stack for the prototype
+- Default to Supabase for backend unless functionality requires otherwise
+- Explain reasoning for each choice
+- Define database requirements and schema considerations
+- Be pragmatic - optimize for MVP/prototype
+- Avoid version specificity unless critical
+- Explain trade-offs clearly
+
+Create Tech Stack and Database Requirements nodes on canvas using [UPDATE_CANVAS] format.
+When complete, end with: [PHASE_COMPLETE]""",
+    
+    4: """You are a technical writer creating a comprehensive PRD in Phase 4. Your role is to:
+- Synthesize all information from previous phases
+- Generate a laser-focused PRD optimized for agentic systems (Cursor, Claude Code)
+- Make it information-rich but appropriately sized
+- Structure it sequentially and categorically
+- Include sections: Overview, Features, Technical Requirements, Database Schema, Implementation Notes
+- No filler content - every section serves a purpose
+
+Generate the full PRD in markdown format.
+When complete, end with: [PHASE_COMPLETE]""",
+    
+    5: """You are guiding the founder through Phase 5 (Export). Your role is to:
+- Confirm PRD completion
+- Provide instructions for downloading documents
+- Explain how to import to Cursor or Claude Code
+- List available documents: Feature docs, Tech stack docs, Complete PRD (all in MD/PDF)
+
+Keep it brief and actionable."""
+}
+
+# Helper functions
+def web_search(query: str) -> str:
+    """Perform web search using Tavily"""
+    try:
+        response = tavily_client.search(query=query, max_results=3)
+        results = []
+        for result in response.get('results', []):
+            results.append(f"- {result.get('title', '')}: {result.get('content', '')[:200]}...")
+        return "\n".join(results) if results else "No results found"
+    except Exception as e:
+        return f"Search error: {str(e)}"
+
+def get_ai_response(messages: List[Dict], phase: int, project_context: Dict = None) -> str:
+    """Get response from OpenAI GPT-4o"""
+    system_prompt = PHASE_PROMPTS.get(phase, PHASE_PROMPTS[1])
+    
+    if project_context:
+        system_prompt += f"\n\nProject Context:\n{json.dumps(project_context, indent=2)}"
+    
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                *messages
+            ],
+            temperature=0.7,
+            max_tokens=2000
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"AI Error: {str(e)}"
+
+def generate_markdown_doc(content: str, title: str) -> str:
+    """Generate markdown document"""
+    return f"# {title}\n\n{content}"
+
+def generate_pdf_from_markdown(md_content: str, output_path: str):
+    """Convert markdown to PDF using weasyprint"""
+    html_content = markdown.markdown(md_content, extensions=['extra', 'tables'])
+    html_full = f"""
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }}
+            h1 {{ color: #333; border-bottom: 2px solid #333; }}
+            h2 {{ color: #555; margin-top: 30px; }}
+            h3 {{ color: #777; }}
+            code {{ background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }}
+            pre {{ background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }}
+        </style>
+    </head>
+    <body>
+        {html_content}
+    </body>
+    </html>
+    """
+    HTML(string=html_full).write_pdf(output_path)
+
+# API Routes
+@app.get("/api/health")
+async def health_check():
+    return {"status": "healthy"}
+
+@app.post("/api/projects")
+async def create_project(project: ProjectCreate):
+    """Create a new project"""
+    try:
+        project_id = str(uuid.uuid4())
+        
+        # Initialize project in Supabase
+        result = supabase.table("projects").insert({
+            "id": project_id,
+            "name": project.name,
+            "phase": 1,
+            "created_at": datetime.utcnow().isoformat(),
+            "canvas_state": json.dumps({
+                "nodes": [
+                    {
+                        "id": "root",
+                        "type": "root",
+                        "position": {"x": 400, "y": 300},
+                        "data": {"label": project.name}
+                    }
+                ],
+                "edges": []
+            })
+        }).execute()
+        
+        return {"project_id": project_id, "name": project.name}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/projects/{project_id}")
+async def get_project(project_id: str):
+    """Get project details"""
+    try:
+        result = supabase.table("projects").select("*").eq("id", project_id).execute()
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        project = result.data[0]
+        
+        # Get chat history
+        chat_result = supabase.table("messages").select("*").eq("project_id", project_id).order("created_at").execute()
+        messages = chat_result.data if chat_result.data else []
+        
+        return {
+            "project": project,
+            "messages": messages
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/chat")
+async def chat(request: ChatRequest):
+    """Handle chat messages"""
+    try:
+        # Get project context
+        project_result = supabase.table("projects").select("*").eq("id", request.project_id).execute()
+        if not project_result.data:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        project = project_result.data[0]
+        
+        # Get chat history
+        chat_result = supabase.table("messages").select("*").eq("project_id", request.project_id).order("created_at").execute()
+        chat_history = [{"role": msg["role"], "content": msg["content"]} for msg in (chat_result.data or [])]
+        
+        # Add user message to history
+        chat_history.append({"role": "user", "content": request.message})
+        
+        # Save user message
+        supabase.table("messages").insert({
+            "project_id": request.project_id,
+            "role": "user",
+            "content": request.message,
+            "created_at": datetime.utcnow().isoformat()
+        }).execute()
+        
+        # Check if message contains web search request
+        if "research" in request.message.lower() or "search" in request.message.lower():
+            search_results = web_search(request.message)
+            context_note = f"\n\n[Web Search Results]:\n{search_results}"
+            chat_history.append({"role": "system", "content": context_note})
+        
+        # Get AI response
+        project_context = {
+            "phase": project["phase"],
+            "canvas_state": json.loads(project["canvas_state"]) if project["canvas_state"] else None
+        }
+        
+        ai_response = get_ai_response(chat_history, request.phase, project_context)
+        
+        # Check for canvas updates in AI response
+        canvas_update = None
+        if "[UPDATE_CANVAS]" in ai_response:
+            try:
+                canvas_json = ai_response.split("[UPDATE_CANVAS]")[1].split("[/UPDATE_CANVAS]")[0].strip()
+                canvas_update = json.loads(canvas_json)
+                # Remove canvas update from display response
+                ai_response = ai_response.replace(f"[UPDATE_CANVAS]{canvas_json}[/UPDATE_CANVAS]", "").strip()
+            except:
+                pass
+        
+        # Check for phase completion
+        phase_complete = "[PHASE_COMPLETE]" in ai_response
+        if phase_complete:
+            ai_response = ai_response.replace("[PHASE_COMPLETE]", "").strip()
+            # Update project phase
+            supabase.table("projects").update({"phase": project["phase"] + 1}).eq("id", request.project_id).execute()
+        
+        # Save AI message
+        supabase.table("messages").insert({
+            "project_id": request.project_id,
+            "role": "assistant",
+            "content": ai_response,
+            "created_at": datetime.utcnow().isoformat()
+        }).execute()
+        
+        return {
+            "message": ai_response,
+            "phase_complete": phase_complete,
+            "canvas_update": canvas_update
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/canvas")
+async def update_canvas(update: NodeUpdate):
+    """Update canvas state"""
+    try:
+        canvas_state = {
+            "nodes": update.nodes,
+            "edges": update.edges
+        }
+        
+        supabase.table("projects").update({
+            "canvas_state": json.dumps(canvas_state)
+        }).eq("id", update.project_id).execute()
+        
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/canvas/{project_id}")
+async def get_canvas(project_id: str):
+    """Get canvas state"""
+    try:
+        result = supabase.table("projects").select("canvas_state").eq("id", project_id).execute()
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        canvas_state = json.loads(result.data[0]["canvas_state"]) if result.data[0]["canvas_state"] else {"nodes": [], "edges": []}
+        return canvas_state
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/documents/generate")
+async def generate_document(request: DocumentRequest):
+    """Generate document (MD and PDF)"""
+    try:
+        # Get project data
+        project_result = supabase.table("projects").select("*").eq("id", request.project_id).execute()
+        if not project_result.data:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        project = project_result.data[0]
+        
+        # Get chat history for context
+        chat_result = supabase.table("messages").select("*").eq("project_id", request.project_id).order("created_at").execute()
+        
+        # Generate document content based on type
+        if request.doc_type == "prd":
+            # Generate full PRD
+            messages = [{"role": "system", "content": "Generate a comprehensive PRD document based on all the information gathered."}]
+            messages.extend([{"role": msg["role"], "content": msg["content"]} for msg in (chat_result.data or [])])
+            
+            content = get_ai_response(messages, 4, {"canvas_state": json.loads(project["canvas_state"])})
+            title = f"{project['name']} - PRD"
+        else:
+            content = "Document generation in progress..."
+            title = f"{project['name']} - {request.doc_type}"
+        
+        # Generate markdown
+        md_content = generate_markdown_doc(content, title)
+        
+        # Save files
+        os.makedirs("/tmp/documents", exist_ok=True)
+        md_path = f"/tmp/documents/{request.project_id}_{request.doc_type}.md"
+        pdf_path = f"/tmp/documents/{request.project_id}_{request.doc_type}.pdf"
+        
+        with open(md_path, "w") as f:
+            f.write(md_content)
+        
+        generate_pdf_from_markdown(md_content, pdf_path)
+        
+        # Save to Supabase
+        supabase.table("documents").insert({
+            "project_id": request.project_id,
+            "doc_type": request.doc_type,
+            "md_path": md_path,
+            "pdf_path": pdf_path,
+            "created_at": datetime.utcnow().isoformat()
+        }).execute()
+        
+        return {"md_path": md_path, "pdf_path": pdf_path}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/documents/{project_id}")
+async def get_documents(project_id: str):
+    """Get all documents for a project"""
+    try:
+        result = supabase.table("documents").select("*").eq("project_id", project_id).execute()
+        return {"documents": result.data or []}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/documents/download/{file_path:path}")
+async def download_document(file_path: str):
+    """Download a document"""
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(file_path)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8001)
