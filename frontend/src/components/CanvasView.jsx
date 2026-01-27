@@ -12,7 +12,8 @@ const nodeTypes = {
   root: CustomNode,
   default: CustomNode,
   feature: CustomNode,
-  ideation: CustomNode,
+  tech: CustomNode,
+  database: CustomNode,
 };
 
 function CanvasView({ nodes: initialNodes, edges: initialEdges, onNodesChange, onEdgesChange }) {
