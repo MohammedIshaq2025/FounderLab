@@ -380,7 +380,7 @@ async def chat(request: ChatRequest):
         return {
             "message": ai_response,
             "phase_complete": phase_complete,
-            "canvas_update": canvas_update
+            "canvas_updates": canvas_updates
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
