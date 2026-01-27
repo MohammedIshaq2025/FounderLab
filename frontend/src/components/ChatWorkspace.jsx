@@ -180,26 +180,37 @@ function ChatWorkspace({ projects, onUpdateProject }) {
 
         {/* Content Area */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Chat Interface */}
-          <div className={`${showCanvas ? 'w-1/2' : 'w-full'} border-r border-gray-200`}>
-            <ChatInterface 
-              messages={messages} 
-              onSendMessage={sendMessage}
-              phase={phase}
-            />
-          </div>
+          <PanelGroup direction="horizontal">
+            {/* Chat Interface */}
+            <Panel defaultSize={showCanvas ? 30 : 100} minSize={20}>
+              <div className="h-full border-r border-gray-200">
+                <ChatInterface 
+                  messages={messages} 
+                  onSendMessage={sendMessage}
+                  phase={phase}
+                />
+              </div>
+            </Panel>
 
-          {/* Canvas */}
-          {showCanvas && (
-            <div className="w-1/2 bg-white">
-              <CanvasView 
-                nodes={canvasState.nodes}
-                edges={canvasState.edges}
-                onNodesChange={(nodes) => setCanvasState(prev => ({ ...prev, nodes }))}
-                onEdgesChange={(edges) => setCanvasState(prev => ({ ...prev, edges }))}
-              />
-            </div>
-          )}
+            {/* Resize Handle */}
+            {showCanvas && (
+              <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-[#5b0e14] transition-colors" />
+            )}
+
+            {/* Canvas */}
+            {showCanvas && (
+              <Panel defaultSize={70} minSize={30}>
+                <div className="h-full bg-white">
+                  <CanvasView 
+                    nodes={canvasState.nodes}
+                    edges={canvasState.edges}
+                    onNodesChange={(nodes) => setCanvasState(prev => ({ ...prev, nodes }))}
+                    onEdgesChange={(edges) => setCanvasState(prev => ({ ...prev, edges }))}
+                  />
+                </div>
+              </Panel>
+            )}
+          </PanelGroup>
         </div>
       </div>
     </div>
