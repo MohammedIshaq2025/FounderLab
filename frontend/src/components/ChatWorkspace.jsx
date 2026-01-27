@@ -18,7 +18,6 @@ function ChatWorkspace({ projects, onUpdateProject }) {
   const [canvasState, setCanvasState] = useState({ nodes: [], edges: [] });
   const [showCanvas, setShowCanvas] = useState(false);
   const [showFiles, setShowFiles] = useState(false);
-  const [chatWidth, setChatWidth] = useState(30); // Percentage
 
   useEffect(() => {
     if (projectId) {
@@ -46,9 +45,13 @@ function ChatWorkspace({ projects, onUpdateProject }) {
       }
       
       if (project.canvas_state) {
-        const canvas = JSON.parse(project.canvas_state);
-        console.log('Loading canvas state:', canvas);
-        setCanvasState(canvas);
+        try {
+          const canvas = JSON.parse(project.canvas_state);
+          console.log('Loading canvas state:', canvas);
+          setCanvasState(canvas);
+        } catch (e) {
+          console.error('Error parsing canvas state:', e);
+        }
       } else {
         console.log('No canvas state found');
       }
@@ -105,15 +108,32 @@ function ChatWorkspace({ projects, onUpdateProject }) {
         if (newPhase === 2) {
           setShowCanvas(true);
         }
+        
+        // Clear messages for new phase - show fresh start message
+        setTimeout(() => {
+          const phaseMessages = {
+            2: 'Phase 2: Feature Mapping. Would you like to propose your core features, or should I suggest some based on our discussion?',
+            3: 'Phase 3: MindMapping. Organizing your features into a structured framework on the canvas...',
+            4: 'Phase 4: PRD Generation. Creating your comprehensive PRD document...',
+            5: 'Phase 5: Export. Your PRD is ready! You can download it from the Files tab.'
+          };
+          
+          setMessages([{
+            role: 'assistant',
+            content: phaseMessages[newPhase] || 'Starting new phase...',
+            created_at: new Date().toISOString()
+          }]);
+        }, 500);
       }
 
       if (response.data.canvas_updates && response.data.canvas_updates.length > 0) {
+        console.log('Received canvas updates:', response.data.canvas_updates);
         for (const update of response.data.canvas_updates) {
           await updateCanvas(update);
         }
+        // Reload to get updated canvas state
+        setTimeout(() => loadProject(), 500);
       }
-
-      await loadProject();
     } catch (error) {
       console.error('Error sending message:', error);
       setMessages(prev => [...prev, {
@@ -126,68 +146,63 @@ function ChatWorkspace({ projects, onUpdateProject }) {
 
   const updateCanvas = async (update) => {
     try {
+      console.log('Updating canvas with:', update);
       let newNodes = [...canvasState.nodes];
       let newEdges = [...canvasState.edges];
 
       if (update.action === 'add_node') {
         const node = update.node;
+        
+        // Check if node already exists
+        const existingNode = newNodes.find(n => n.id === node.id);
+        if (existingNode) {
+          console.log('Node already exists:', node.id);
+          return;
+        }
+        
         const parentNode = newNodes.find(n => n.id === node.parentId);
         const position = parentNode 
           ? { x: parentNode.position.x + 250, y: parentNode.position.y + 100 }
           : { x: 400, y: 300 };
 
-        newNodes.push({
+        const newNode = {
           id: node.id,
-          type: node.type || 'default',
+          type: node.type || 'feature',
           position,
           data: node.data
-        });
+        };
+        
+        newNodes.push(newNode);
+        console.log('Added new node:', newNode);
 
         if (node.parentId) {
-          newEdges.push({
+          const newEdge = {
             id: `${node.parentId}-${node.id}`,
             source: node.parentId,
             target: node.id,
             type: 'smoothstep',
             animated: false,
             style: { strokeDasharray: '5 5', stroke: '#5b0e14' }
-          });
+          };
+          newEdges.push(newEdge);
+          console.log('Added new edge:', newEdge);
         }
       }
 
       const newCanvasState = { nodes: newNodes, edges: newEdges };
       setCanvasState(newCanvasState);
 
-      await axios.post(`${API_URL}/api/canvas`, {
+      // Save to backend
+      const saveResponse = await axios.post(`${API_URL}/api/canvas`, {
         project_id: projectId,
         nodes: newNodes,
         edges: newEdges
       });
+      
+      console.log('Canvas saved to backend:', saveResponse.data);
     } catch (error) {
       console.error('Error updating canvas:', error);
     }
-  };
-
-  const handleMouseDown = (e) => {
-    e.preventDefault();
-    const startX = e.clientX;
-    const startWidth = chatWidth;
-
-    const handleMouseMove = (e) => {
-      const deltaX = e.clientX - startX;
-      const containerWidth = window.innerWidth - 16; // minus sidebar
-      const deltaPercent = (deltaX / containerWidth) * 100;
-      const newWidth = Math.min(Math.max(startWidth + deltaPercent, 20), 80);
-      setChatWidth(newWidth);
-    };
-
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
   };
 
   return (
@@ -202,10 +217,10 @@ function ChatWorkspace({ projects, onUpdateProject }) {
       <div className="flex-1 flex flex-col overflow-hidden">
         <ProgressBar phase={phase} projectName={projectName} />
 
-        <div className="flex-1 flex overflow-hidden relative">
+        <div className="flex-1 flex overflow-hidden">
           <div 
-            className="border-r border-gray-200 flex-shrink-0 transition-all duration-300"
-            style={{ width: showCanvas ? `${chatWidth}%` : '100%' }}
+            className="border-r border-gray-200 transition-all duration-300"
+            style={{ width: showCanvas ? '30%' : '100%' }}
           >
             <ChatInterface 
               messages={messages} 
@@ -215,21 +230,14 @@ function ChatWorkspace({ projects, onUpdateProject }) {
           </div>
 
           {showCanvas && (
-            <>
-              <div
-                className="w-1 bg-gray-200 hover:bg-[#5b0e14] cursor-col-resize transition-colors z-10"
-                onMouseDown={handleMouseDown}
+            <div className="flex-1 bg-white">
+              <CanvasView 
+                nodes={canvasState.nodes}
+                edges={canvasState.edges}
+                onNodesChange={(nodes) => setCanvasState(prev => ({ ...prev, nodes }))}
+                onEdgesChange={(edges) => setCanvasState(prev => ({ ...prev, edges }))}
               />
-              
-              <div className="flex-1 bg-white">
-                <CanvasView 
-                  nodes={canvasState.nodes}
-                  edges={canvasState.edges}
-                  onNodesChange={(nodes) => setCanvasState(prev => ({ ...prev, nodes }))}
-                  onEdgesChange={(edges) => setCanvasState(prev => ({ ...prev, edges }))}
-                />
-              </div>
-            </>
+            </div>
           )}
         </div>
       </div>
