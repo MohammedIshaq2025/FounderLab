@@ -96,7 +96,7 @@ function ChatInterface({ messages, onSendMessage, phase }) {
             </div>
             <div className="bg-white text-gray-800 border border-gray-100 rounded-2xl px-6 py-4 shadow-lg">
               <div className="flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                <Loader2 className="w-4 h-4 animate-spin text-[#5b0e14]" />
                 <span className="text-sm text-gray-500">Thinking...</span>
               </div>
             </div>
