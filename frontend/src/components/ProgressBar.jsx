@@ -1,7 +1,7 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 
-function ProgressBar({ phase, projectName }) {
+function ProgressBar({ phase, projectName, onPhaseClick }) {
   const phases = [
     { number: 1, name: 'Ideation', short: 'Ideation' },
     { number: 2, name: 'Research', short: 'Research' },
