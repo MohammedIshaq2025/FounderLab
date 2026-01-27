@@ -50,16 +50,30 @@ function App() {
   const createProject = async (name) => {
     try {
       const response = await axios.post(`${API_URL}/api/projects`, { name });
-      setProjectId(response.data.project_id);
-      setProjectName(name);
-      setPhase(1);
+      const newProjectId = response.data.project_id;
       
-      // Add initial welcome message
-      setMessages([{
+      // Send initial welcome message to backend first
+      const welcomeMessage = {
         role: 'assistant',
         content: `Welcome to FounderLab! I'm here to help you transform your idea into a polished PRD. Let's start with Phase 1: Ideation.\n\nTell me, what problem are you trying to solve?`,
         created_at: new Date().toISOString()
-      }]);
+      };
+      
+      // Save welcome message to backend
+      try {
+        await axios.post(`${API_URL}/api/chat`, {
+          project_id: newProjectId,
+          message: 'init',
+          phase: 1
+        });
+      } catch (err) {
+        console.error('Error saving welcome message:', err);
+      }
+      
+      // Now set the project ID which will trigger loadProject
+      setProjectId(newProjectId);
+      setProjectName(name);
+      setPhase(1);
     } catch (error) {
       console.error('Error creating project:', error);
     }
