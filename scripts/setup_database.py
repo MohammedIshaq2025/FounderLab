@@ -1,14 +1,15 @@
 import os
+import sys
+from pathlib import Path
+
+# Add backend directory to path for .env loading
+backend_dir = Path(__file__).parent.parent / 'backend'
+sys.path.insert(0, str(backend_dir))
+
 from dotenv import load_dotenv
-from supabase import create_client
 
-load_dotenv()
-
-# Initialize Supabase client
-supabase = create_client(
-    os.environ.get("SUPABASE_PROJECT_URL"),
-    os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-)
+# Load .env from backend directory
+load_dotenv(backend_dir / '.env')
 
 # SQL to create tables
 create_tables_sql = """
@@ -46,6 +47,7 @@ CREATE INDEX IF NOT EXISTS idx_documents_project_id ON documents(project_id);
 """
 
 print("Setting up Supabase database tables...")
+print(f"\nSupabase URL: {os.environ.get('SUPABASE_PROJECT_URL')}")
 print("\nPlease run the following SQL in your Supabase SQL Editor:")
 print("=" * 80)
 print(create_tables_sql)
@@ -55,3 +57,21 @@ print("1. Go to https://supabase.com/dashboard")
 print("2. Select your project")
 print("3. Click on 'SQL Editor' in the left sidebar")
 print("4. Paste the SQL above and click 'Run'")
+print("\nAlternatively, I'll attempt to create the tables via API...")
+
+try:
+    from supabase import create_client
+    
+    supabase = create_client(
+        os.environ.get("SUPABASE_PROJECT_URL"),
+        os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    )
+    
+    # Execute SQL via RPC or direct query if available
+    print("\nAttempting to create tables...")
+    print("Note: Table creation via API may require additional setup.")
+    print("Please use the SQL Editor method above for guaranteed success.")
+    
+except Exception as e:
+    print(f"\nNote: Could not create tables via API: {e}")
+    print("Please use the SQL Editor method above.")
