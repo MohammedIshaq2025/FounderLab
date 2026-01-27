@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels';
 import ChatInterface from './ChatInterface';
 import CanvasView from './CanvasView';
 import WorkspaceSidebar from './WorkspaceSidebar';
@@ -19,6 +18,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
   const [canvasState, setCanvasState] = useState({ nodes: [], edges: [] });
   const [showCanvas, setShowCanvas] = useState(false);
   const [showFiles, setShowFiles] = useState(false);
+  const [chatWidth, setChatWidth] = useState(30); // Percentage
 
   useEffect(() => {
     if (projectId) {
@@ -104,7 +104,6 @@ function ChatWorkspace({ projects, onUpdateProject }) {
         }
       }
 
-      // Handle canvas updates
       if (response.data.canvas_updates && response.data.canvas_updates.length > 0) {
         for (const update of response.data.canvas_updates) {
           await updateCanvas(update);
@@ -166,9 +165,30 @@ function ChatWorkspace({ projects, onUpdateProject }) {
     }
   };
 
+  const handleMouseDown = (e) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = chatWidth;
+
+    const handleMouseMove = (e) => {
+      const deltaX = e.clientX - startX;
+      const containerWidth = window.innerWidth - 16; // minus sidebar
+      const deltaPercent = (deltaX / containerWidth) * 100;
+      const newWidth = Math.min(Math.max(startWidth + deltaPercent, 20), 80);
+      setChatWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
   return (
     <div className="h-screen flex bg-gray-50">
-      {/* Minimal Sidebar */}
       <WorkspaceSidebar 
         onNavigateHome={() => navigate('/')}
         onToggleFiles={() => setShowFiles(!showFiles)}
@@ -176,44 +196,38 @@ function ChatWorkspace({ projects, onUpdateProject }) {
         projectId={projectId}
       />
 
-      {/* Main Workspace */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Progress Bar */}
         <ProgressBar phase={phase} projectName={projectName} />
 
-        {/* Content Area */}
-        <div className="flex-1 flex overflow-hidden">
-          <PanelGroup direction="horizontal">
-            {/* Chat Interface */}
-            <Panel defaultSize={showCanvas ? 30 : 100} minSize={20}>
-              <div className="h-full border-r border-gray-200">
-                <ChatInterface 
-                  messages={messages} 
-                  onSendMessage={sendMessage}
-                  phase={phase}
+        <div className="flex-1 flex overflow-hidden relative">
+          <div 
+            className="border-r border-gray-200 flex-shrink-0 transition-all duration-300"
+            style={{ width: showCanvas ? `${chatWidth}%` : '100%' }}
+          >
+            <ChatInterface 
+              messages={messages} 
+              onSendMessage={sendMessage}
+              phase={phase}
+            />
+          </div>
+
+          {showCanvas && (
+            <>
+              <div
+                className="w-1 bg-gray-200 hover:bg-[#5b0e14] cursor-col-resize transition-colors z-10"
+                onMouseDown={handleMouseDown}
+              />
+              
+              <div className="flex-1 bg-white">
+                <CanvasView 
+                  nodes={canvasState.nodes}
+                  edges={canvasState.edges}
+                  onNodesChange={(nodes) => setCanvasState(prev => ({ ...prev, nodes }))}
+                  onEdgesChange={(edges) => setCanvasState(prev => ({ ...prev, edges }))}
                 />
               </div>
-            </Panel>
-
-            {/* Resize Handle */}
-            {showCanvas && (
-              <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-[#5b0e14] transition-colors" />
-            )}
-
-            {/* Canvas */}
-            {showCanvas && (
-              <Panel defaultSize={70} minSize={30}>
-                <div className="h-full bg-white">
-                  <CanvasView 
-                    nodes={canvasState.nodes}
-                    edges={canvasState.edges}
-                    onNodesChange={(nodes) => setCanvasState(prev => ({ ...prev, nodes }))}
-                    onEdgesChange={(edges) => setCanvasState(prev => ({ ...prev, edges }))}
-                  />
-                </div>
-              </Panel>
-            )}
-          </PanelGroup>
+            </>
+          )}
         </div>
       </div>
     </div>
