@@ -13,5 +13,10 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 3000,
     strictPort: true,
+    allowedHosts: [
+      'vizrequire.preview.emergentagent.com',
+      '.preview.emergentagent.com',
+      'localhost',
+    ],
   },
 });
