@@ -342,15 +342,25 @@ async def chat(request: ChatRequest):
         ai_response = get_ai_response(chat_history, request.phase, project_context)
         
         # Check for canvas updates in AI response
-        canvas_update = None
-        if "[UPDATE_CANVAS]" in ai_response:
+        canvas_updates = []
+        cleaned_response = ai_response
+        
+        # Extract all canvas updates
+        while "[UPDATE_CANVAS]" in cleaned_response:
             try:
-                canvas_json = ai_response.split("[UPDATE_CANVAS]")[1].split("[/UPDATE_CANVAS]")[0].strip()
+                start = cleaned_response.index("[UPDATE_CANVAS]")
+                end = cleaned_response.index("[/UPDATE_CANVAS]") + len("[/UPDATE_CANVAS]")
+                canvas_json = cleaned_response[start+len("[UPDATE_CANVAS]"):end-len("[/UPDATE_CANVAS]")].strip()
                 canvas_update = json.loads(canvas_json)
-                # Remove canvas update from display response
-                ai_response = ai_response.replace(f"[UPDATE_CANVAS]{canvas_json}[/UPDATE_CANVAS]", "").strip()
-            except:
-                pass
+                canvas_updates.append(canvas_update)
+                
+                # Remove this update from the response
+                cleaned_response = cleaned_response[:start] + cleaned_response[end:]
+            except (ValueError, json.JSONDecodeError):
+                break
+        
+        # Clean up response
+        ai_response = cleaned_response.strip()
         
         # Check for phase completion
         phase_complete = "[PHASE_COMPLETE]" in ai_response
