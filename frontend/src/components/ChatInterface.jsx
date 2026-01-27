@@ -121,7 +121,7 @@ function ChatInterface({ messages, onSendMessage, phase }) {
               placeholder="Type your message... (Shift+Enter for new line)"
               disabled={isLoading}
               rows={1}
-              className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition disabled:opacity-50 disabled:cursor-not-allowed resize-none text-base shadow-sm"
+              className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#5b0e14] focus:border-transparent outline-none transition disabled:opacity-50 disabled:cursor-not-allowed resize-none text-base shadow-sm"
             />
           </div>
           <button
