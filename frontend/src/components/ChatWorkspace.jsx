@@ -3,9 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ChatInterface from './ChatInterface';
 import CanvasView from './CanvasView';
-import Sidebar from './WorkspaceSidebar';
+import WorkspaceSidebar from './WorkspaceSidebar';
 import ProgressBar from './ProgressBar';
-import { Home, FileText } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || '';
 
@@ -34,11 +33,9 @@ function ChatWorkspace({ projects, onUpdateProject }) {
       setProjectName(project.name);
       setPhase(project.phase);
       
-      // Load messages from backend or use welcome message
       if (projectMessages && projectMessages.length > 0) {
         setMessages(projectMessages);
       } else {
-        // Set welcome message for new projects
         const welcomeMessage = {
           role: 'assistant',
           content: `Welcome to FounderLab! I'm here to help you transform your idea into a polished PRD. Let's start with Phase 1: Ideation.\n\nTell me, what problem are you trying to solve?`,
@@ -52,16 +49,13 @@ function ChatWorkspace({ projects, onUpdateProject }) {
         setCanvasState(canvas);
       }
       
-      // Show canvas from phase 2 onwards
       if (project.phase >= 2) {
         setShowCanvas(true);
       }
       
-      // Update project metadata
       onUpdateProject(projectId, { phase: project.phase });
     } catch (error) {
       console.error('Error loading project:', error);
-      // If project doesn't exist in backend, create it
       if (error.response?.status === 404) {
         const project = projects.find(p => p.id === projectId);
         if (project) {
@@ -79,7 +73,6 @@ function ChatWorkspace({ projects, onUpdateProject }) {
 
   const sendMessage = async (message) => {
     try {
-      // Add user message immediately
       const userMessage = {
         role: 'user',
         content: message,
@@ -87,14 +80,12 @@ function ChatWorkspace({ projects, onUpdateProject }) {
       };
       setMessages(prev => [...prev, userMessage]);
 
-      // Send to backend
       const response = await axios.post(`${API_URL}/api/chat`, {
         project_id: projectId,
         message,
         phase
       });
 
-      // Add AI response
       const aiMessage = {
         role: 'assistant',
         content: response.data.message,
@@ -102,24 +93,20 @@ function ChatWorkspace({ projects, onUpdateProject }) {
       };
       setMessages(prev => [...prev, aiMessage]);
 
-      // Handle phase completion
       if (response.data.phase_complete) {
         const newPhase = phase + 1;
         setPhase(newPhase);
         onUpdateProject(projectId, { phase: newPhase });
         
-        // Show canvas from phase 2
         if (newPhase === 2) {
           setShowCanvas(true);
         }
       }
 
-      // Handle canvas update
       if (response.data.canvas_update) {
         updateCanvas(response.data.canvas_update);
       }
 
-      // Reload project to get updated state
       await loadProject();
     } catch (error) {
       console.error('Error sending message:', error);
@@ -176,9 +163,9 @@ function ChatWorkspace({ projects, onUpdateProject }) {
   };
 
   return (
-    <div className=\"h-screen flex bg-gray-50\">
+    <div className="h-screen flex bg-gray-50">
       {/* Minimal Sidebar */}
-      <Sidebar 
+      <WorkspaceSidebar 
         onNavigateHome={() => navigate('/')}
         onToggleFiles={() => setShowFiles(!showFiles)}
         showFiles={showFiles}
@@ -186,12 +173,12 @@ function ChatWorkspace({ projects, onUpdateProject }) {
       />
 
       {/* Main Workspace */}
-      <div className=\"flex-1 flex flex-col overflow-hidden\">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Progress Bar */}
         <ProgressBar phase={phase} projectName={projectName} />
 
         {/* Content Area */}
-        <div className=\"flex-1 flex overflow-hidden\">
+        <div className="flex-1 flex overflow-hidden">
           {/* Chat Interface */}
           <div className={`${showCanvas ? 'w-1/2' : 'w-full'} border-r border-gray-200`}>
             <ChatInterface 
@@ -203,7 +190,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
 
           {/* Canvas */}
           {showCanvas && (
-            <div className=\"w-1/2 bg-white\">
+            <div className="w-1/2 bg-white">
               <CanvasView 
                 nodes={canvasState.nodes}
                 edges={canvasState.edges}
