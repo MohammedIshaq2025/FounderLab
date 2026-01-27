@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, Bot, User } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 function ChatInterface({ messages, onSendMessage, phase }) {
   const [input, setInput] = useState('');
