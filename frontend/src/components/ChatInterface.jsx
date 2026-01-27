@@ -73,9 +73,8 @@ function ChatInterface({ messages, onSendMessage, phase }) {
                   : 'bg-white text-gray-800 border border-gray-100'
               }`}
             >
-              <div className="text-sm leading-relaxed">
+              <div className="text-sm leading-relaxed prose prose-sm max-w-none">
                 <ReactMarkdown
-                  className="prose prose-sm max-w-none prose-headings:font-semibold prose-p:my-2 prose-ul:my-2 prose-li:my-0.5"
                   components={{
                     p: ({node, ...props}) => <p className="my-2" {...props} />,
                     strong: ({node, ...props}) => <strong className="font-bold text-gray-900" {...props} />,
