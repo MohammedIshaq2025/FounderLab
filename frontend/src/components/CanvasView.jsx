@@ -56,8 +56,16 @@ function CanvasView({ nodes: initialNodes, edges: initialEdges, onNodesChange, o
     <div className="w-full h-full relative">
       <div className="absolute top-4 left-4 z-10 bg-white px-4 py-2 rounded-lg shadow-md border border-gray-200">
         <h3 className="text-sm font-semibold text-gray-900">Project Canvas</h3>
-        <p className="text-xs text-gray-500">Pan and zoom to explore</p>
+        <p className="text-xs text-gray-500">Nodes: {nodes.length} | Pan and zoom to explore</p>
       </div>
+      
+      {nodes.length === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <p className="text-gray-400 text-sm">No nodes yet. Start chatting to build your canvas!</p>
+          </div>
+        </div>
+      )}
       
       <ReactFlow
         nodes={nodes}
