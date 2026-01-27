@@ -52,28 +52,18 @@ function App() {
       const response = await axios.post(`${API_URL}/api/projects`, { name });
       const newProjectId = response.data.project_id;
       
-      // Send initial welcome message to backend first
+      setProjectId(newProjectId);
+      setProjectName(name);
+      setPhase(1);
+      
+      // Set initial welcome message in state
       const welcomeMessage = {
         role: 'assistant',
         content: `Welcome to FounderLab! I'm here to help you transform your idea into a polished PRD. Let's start with Phase 1: Ideation.\n\nTell me, what problem are you trying to solve?`,
         created_at: new Date().toISOString()
       };
       
-      // Save welcome message to backend
-      try {
-        await axios.post(`${API_URL}/api/chat`, {
-          project_id: newProjectId,
-          message: 'init',
-          phase: 1
-        });
-      } catch (err) {
-        console.error('Error saving welcome message:', err);
-      }
-      
-      // Now set the project ID which will trigger loadProject
-      setProjectId(newProjectId);
-      setProjectName(name);
-      setPhase(1);
+      setMessages([welcomeMessage]);
     } catch (error) {
       console.error('Error creating project:', error);
     }
