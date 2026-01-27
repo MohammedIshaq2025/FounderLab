@@ -31,7 +31,11 @@ function App() {
       
       setProjectName(project.name);
       setPhase(project.phase);
-      setMessages(projectMessages);
+      
+      // Only update messages if there are messages from backend
+      if (projectMessages && projectMessages.length > 0) {
+        setMessages(projectMessages);
+      }
       
       if (project.canvas_state) {
         const canvas = JSON.parse(project.canvas_state);
