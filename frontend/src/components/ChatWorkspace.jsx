@@ -47,7 +47,10 @@ function ChatWorkspace({ projects, onUpdateProject }) {
       
       if (project.canvas_state) {
         const canvas = JSON.parse(project.canvas_state);
+        console.log('Loading canvas state:', canvas);
         setCanvasState(canvas);
+      } else {
+        console.log('No canvas state found');
       }
       
       if (project.phase >= 2) {
