@@ -68,7 +68,7 @@ function ChatInterface({ messages, onSendMessage, phase }) {
             <div
               className={`max-w-[75%] rounded-2xl px-6 py-4 shadow-lg ${
                 message.role === 'user'
-                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
+                  ? 'bg-[#5b0e14] text-white'
                   : 'bg-white text-gray-800 border border-gray-100'
               }`}
             >
