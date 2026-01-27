@@ -53,14 +53,14 @@ function ChatInterface({ messages, onSendMessage, phase }) {
             <div
               className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-md ${
                 message.role === 'user'
-                  ? 'bg-gradient-to-br from-indigo-500 to-purple-600'
-                  : 'bg-white border-2 border-indigo-100'
+                  ? 'bg-[#5b0e14]'
+                  : 'bg-white border-2 border-gray-200'
               }`}
             >
               {message.role === 'user' ? (
                 <User className="w-5 h-5 text-white" />
               ) : (
-                <Bot className="w-5 h-5 text-indigo-600" />
+                <Bot className="w-5 h-5 text-[#5b0e14]" />
               )}
             </div>
 
