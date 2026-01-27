@@ -71,11 +71,6 @@ function CanvasView({ nodes: initialNodes, edges: initialEdges, onNodesChange, o
       >
         <Background color="#e5e7eb" gap={16} />
         <Controls className="bg-white border border-gray-200 rounded-lg shadow-md" />
-        <MiniMap
-          className="bg-white border border-gray-200 rounded-lg shadow-md"
-          nodeColor="#3b82f6"
-          maskColor="rgba(0, 0, 0, 0.1)"
-        />
       </ReactFlow>
     </div>
   );
