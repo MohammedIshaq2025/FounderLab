@@ -7,18 +7,27 @@ function cn(...classes) {
 }
 
 /* ─── Shared card shell ─── */
-const Card = ({ children, className, accentColor }) => (
+const Card = ({ children, className, accentColor, typeLabel }) => (
   <div
     className={cn(
-      'bg-white rounded-xl overflow-hidden',
+      'relative bg-white rounded-tr-xl rounded-br-xl rounded-bl-xl overflow-visible',
       'border border-stone-200/80',
       'shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]',
       className,
     )}
   >
+    {/* Floating type tag */}
+    {typeLabel && (
+      <div
+        className="absolute -top-[14px] left-0 px-2 py-[3px] rounded-tr-md rounded-br-md text-[9px] font-bold tracking-[0.1em] uppercase leading-none text-white select-none z-10"
+        style={{ backgroundColor: accentColor || '#78716C' }}
+      >
+        {typeLabel}
+      </div>
+    )}
     {/* Accent strip */}
     {accentColor && (
-      <div className="h-[2.5px]" style={{ background: accentColor }} />
+      <div className="h-[2.5px] rounded-tr-xl" style={{ background: accentColor }} />
     )}
     {children}
   </div>
@@ -86,20 +95,14 @@ function IdeationNode({ data }) {
   const pillars = data.pillars || {};
 
   return (
-    <Card accentColor="#E8613C" className="min-w-[268px] max-w-[320px]">
+    <Card accentColor="#E8613C" typeLabel="Ideation" className="min-w-[268px] max-w-[320px]">
       <Handle
         type="target"
         position={Position.Left}
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
 
-      <div className="px-4 pt-3.5 pb-1">
-        <span className="text-[13px] font-semibold text-stone-800 tracking-[-0.01em]">
-          Ideation
-        </span>
-      </div>
-
-      <div className="px-3 pb-3.5 space-y-1.5">
+      <div className="px-3 pt-3.5 pb-3.5 space-y-1.5">
         {Object.entries(PILLAR_LABELS).map(([key, title]) => (
           <div
             key={key}
@@ -131,18 +134,17 @@ function FeatureGroupNode({ data }) {
   const subFeatures = data.subFeatures || [];
 
   return (
-    <Card accentColor="#D97706" className="min-w-[228px] max-w-[284px]">
+    <Card accentColor="#0D9488" typeLabel="Feature" className="min-w-[228px] max-w-[284px]">
       <Handle
         type="target"
         position={Position.Top}
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
 
-      <div className="px-4 pt-3.5 pb-1.5 flex items-center justify-between gap-3">
-        <span className="text-[13px] font-semibold text-stone-800 tracking-[-0.01em] truncate flex-1">
+      <div className="px-4 pt-3.5 pb-1.5">
+        <span className="text-[13px] font-semibold text-stone-800 tracking-[-0.01em] truncate block">
           {data.label}
         </span>
-        <TypeBadge label="Feature" color="#B45309" bg="#FEF3C7" />
       </div>
 
       {subFeatures.length > 0 && (
@@ -167,18 +169,17 @@ function FeatureGroupNode({ data }) {
    ═══════════════════════════════════════════════════════════════════ */
 function ComplementaryFeaturesNode({ data }) {
   return (
-    <Card accentColor="#0D9488" className="min-w-[228px] max-w-[284px]">
+    <Card accentColor="#0D9488" typeLabel="Feature" className="min-w-[228px] max-w-[284px]">
       <Handle
         type="target"
         position={Position.Top}
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
 
-      <div className="px-4 pt-3.5 pb-1.5 flex items-center justify-between gap-3">
-        <span className="text-[13px] font-semibold text-stone-800 tracking-[-0.01em] truncate flex-1">
+      <div className="px-4 pt-3.5 pb-1.5">
+        <span className="text-[13px] font-semibold text-stone-800 tracking-[-0.01em] truncate block">
           {data.label}
         </span>
-        <TypeBadge label="Bonus" color="#0F766E" bg="#CCFBF1" />
       </div>
 
       <div className="px-3 pb-3.5 space-y-1.5">
@@ -201,30 +202,24 @@ function ComplementaryFeaturesNode({ data }) {
    ═══════════════════════════════════════════════════════════════════ */
 function UIDesignNode({ data }) {
   return (
-    <Card accentColor="#E11D48" className="min-w-[268px] max-w-[320px]">
+    <Card accentColor="#E11D48" typeLabel="UI Design" className="min-w-[268px] max-w-[320px]">
       <Handle
         type="target"
         position={Position.Right}
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
 
-      <div className="px-4 pt-3.5 pb-1">
-        <span className="text-[13px] font-semibold text-stone-800 tracking-[-0.01em]">
-          {data.label}
-        </span>
-      </div>
-
-      <div className="px-3 pb-3.5 space-y-2">
+      <div className="px-3 pt-3.5 pb-3.5 space-y-1.5">
         {/* Theme */}
-        <div className="bg-stone-50/80 rounded-lg px-3 py-2.5 border border-stone-100">
-          <SectionLabel>Theme</SectionLabel>
-          <div className="text-[11.5px] text-stone-700 leading-relaxed">{data.theme}</div>
+        <div className="bg-stone-50/80 rounded-lg px-3 py-2 border border-stone-100">
+          <div className="text-[11.5px] font-semibold text-stone-700 leading-snug">Theme</div>
+          <div className="text-[11.5px] text-stone-500 leading-relaxed mt-0.5">{data.theme}</div>
         </div>
 
         {/* Palette */}
-        <div className="bg-stone-50/80 rounded-lg px-3 py-2.5 border border-stone-100">
-          <SectionLabel>Palette</SectionLabel>
-          <div className="text-[11.5px] text-stone-700 leading-relaxed mb-2">{data.paletteName}</div>
+        <div className="bg-stone-50/80 rounded-lg px-3 py-2 border border-stone-100">
+          <div className="text-[11.5px] font-semibold text-stone-700 leading-snug">Palette</div>
+          <div className="text-[11.5px] text-stone-500 leading-relaxed mt-0.5 mb-1.5">{data.paletteName}</div>
           <div className="flex gap-1.5">
             {(data.colors || []).map((color, idx) => (
               <div
@@ -238,33 +233,15 @@ function UIDesignNode({ data }) {
         </div>
 
         {/* Style */}
-        <div className="bg-stone-50/80 rounded-lg px-3 py-2.5 border border-stone-100">
-          <SectionLabel>Style</SectionLabel>
-          <div className="text-[11.5px] text-stone-700 leading-relaxed">{data.designStyle}</div>
+        <div className="bg-stone-50/80 rounded-lg px-3 py-2 border border-stone-100">
+          <div className="text-[11.5px] font-semibold text-stone-700 leading-snug">Style</div>
+          <div className="text-[11.5px] text-stone-500 leading-relaxed mt-0.5">{data.designStyle}</div>
         </div>
 
-        {/* Design Guidelines */}
-        {(data.designGuidelines || []).length > 0 && (
-          <div className="bg-stone-50/80 rounded-lg px-3 py-2.5 border border-stone-100">
-            <SectionLabel>Design Language</SectionLabel>
-            <div className="mt-1 space-y-1">
-              {data.designGuidelines.map((g, idx) => {
-                const colonIdx = g.indexOf(':');
-                const hasLabel = colonIdx > 0 && colonIdx < 30;
-                return (
-                  <div key={idx} className="text-[11.5px] text-stone-600 leading-relaxed">
-                    {hasLabel ? (
-                      <>
-                        <span className="font-semibold text-stone-700">{g.slice(0, colonIdx)}</span>
-                        {g.slice(colonIdx)}
-                      </>
-                    ) : g}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {/* Design Guidelines — each as its own sub-element */}
+        {(data.designGuidelines || []).map((g, idx) => (
+          <SubItem key={idx} text={g} />
+        ))}
       </div>
     </Card>
   );
@@ -281,20 +258,14 @@ function SystemMapNode({ data }) {
   ];
 
   return (
-    <Card accentColor="#6366F1" className="min-w-[302px] max-w-[372px]">
+    <Card accentColor="#6366F1" typeLabel="System Map" className="min-w-[302px] max-w-[372px]">
       <Handle
         type="target"
         position={Position.Bottom}
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
 
-      <div className="px-4 pt-3.5 pb-1">
-        <span className="text-[13px] font-semibold text-stone-800 tracking-[-0.01em]">
-          {data.label}
-        </span>
-      </div>
-
-      <div className="px-3 pb-3.5 space-y-1.5">
+      <div className="px-3 pt-3.5 pb-3.5 space-y-1.5">
         {sections.map(({ key, label }) => {
           const items = data[key] || [];
           return (
@@ -345,102 +316,109 @@ function CustomNode({ data, type }) {
   return (
     <div
       className={cn(
-        'rounded-xl border overflow-hidden transition-all',
+        'relative rounded-tr-xl rounded-br-xl rounded-bl-xl border overflow-visible transition-all',
         isRoot
           ? 'bg-gradient-to-br from-stone-800 via-stone-850 to-stone-900 border-stone-700/60 text-white min-w-[188px] max-w-[244px] shadow-[0_2px_8px_rgba(28,25,23,0.25),0_8px_24px_rgba(28,25,23,0.15)]'
           : 'bg-white border-stone-200/80 text-stone-800 min-w-[168px] max-w-[224px] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]',
       )}
     >
-      {!isRoot && (
-        <Handle
-          type="target"
-          position={Position.Top}
-          className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
-        />
-      )}
+      {/* Floating type tag */}
+      <div
+        className="absolute -top-[14px] left-0 px-2 py-[3px] rounded-tr-md rounded-br-md text-[9px] font-bold tracking-[0.1em] uppercase leading-none text-white select-none z-10"
+        style={{ backgroundColor: isRoot ? '#44403C' : '#A8A29E' }}
+      >
+        {isRoot ? 'Root' : 'Node'}
+      </div>
+        {!isRoot && (
+          <Handle
+            type="target"
+            position={Position.Top}
+            className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
+          />
+        )}
 
-      <div className={cn('px-4', isRoot ? 'py-3.5' : 'py-3')}>
-        <div className="flex items-center gap-2.5">
-          {isRoot && (
-            <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
-              <Database className="w-3.5 h-3.5 text-white/80" />
+        <div className={cn('px-4', isRoot ? 'py-3.5' : 'py-3')}>
+          <div className="flex items-center gap-2.5">
+            {isRoot && (
+              <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
+                <Database className="w-3.5 h-3.5 text-white/80" />
+              </div>
+            )}
+            <div
+              className={cn(
+                'flex-1 truncate tracking-[-0.01em]',
+                isRoot ? 'text-[13.5px] font-bold text-white' : 'text-[13px] font-semibold text-stone-800',
+              )}
+            >
+              {data.label}
+            </div>
+          </div>
+
+          {data.description && (
+            <p
+              className={cn(
+                'text-[11.5px] leading-relaxed mt-1.5',
+                isRoot ? 'text-white/60' : 'text-stone-500',
+              )}
+            >
+              {data.description}
+            </p>
+          )}
+
+          {data.info && (
+            <div className="flex flex-wrap gap-1 mt-2.5">
+              {data.info.split(',').map((item, idx) => (
+                <span
+                  key={idx}
+                  className={cn(
+                    'text-[10px] font-medium px-1.5 py-0.5 rounded-md',
+                    isRoot ? 'bg-white/10 text-white/70' : 'bg-stone-100 text-stone-500',
+                  )}
+                >
+                  {item.trim()}
+                </span>
+              ))}
             </div>
           )}
-          <div
-            className={cn(
-              'flex-1 truncate tracking-[-0.01em]',
-              isRoot ? 'text-[13.5px] font-bold text-white' : 'text-[13px] font-semibold text-stone-800',
-            )}
-          >
-            {data.label}
-          </div>
         </div>
 
-        {data.description && (
-          <p
-            className={cn(
-              'text-[11.5px] leading-relaxed mt-1.5',
-              isRoot ? 'text-white/60' : 'text-stone-500',
-            )}
-          >
-            {data.description}
-          </p>
+        {/* Bottom source handle */}
+        <Handle
+          type="source"
+          position={Position.Bottom}
+          id="bottom"
+          className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
+        />
+
+        {/* Right source handle (for ideation node) */}
+        {isRoot && (
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="right"
+            className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
+          />
         )}
 
-        {data.info && (
-          <div className="flex flex-wrap gap-1 mt-2.5">
-            {data.info.split(',').map((item, idx) => (
-              <span
-                key={idx}
-                className={cn(
-                  'text-[10px] font-medium px-1.5 py-0.5 rounded-md',
-                  isRoot ? 'bg-white/10 text-white/70' : 'bg-stone-100 text-stone-500',
-                )}
-              >
-                {item.trim()}
-              </span>
-            ))}
-          </div>
+        {/* Left source handle (for UI design node) */}
+        {isRoot && (
+          <Handle
+            type="source"
+            position={Position.Left}
+            id="left"
+            className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
+          />
         )}
-      </div>
 
-      {/* Bottom source handle */}
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        id="bottom"
-        className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
-      />
-
-      {/* Right source handle (for ideation node) */}
-      {isRoot && (
-        <Handle
-          type="source"
-          position={Position.Right}
-          id="right"
-          className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
-        />
-      )}
-
-      {/* Left source handle (for UI design node) */}
-      {isRoot && (
-        <Handle
-          type="source"
-          position={Position.Left}
-          id="left"
-          className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
-        />
-      )}
-
-      {/* Top source handle (for system map node) */}
-      {isRoot && (
-        <Handle
-          type="source"
-          position={Position.Top}
-          id="top"
-          className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
-        />
-      )}
+        {/* Top source handle (for system map node) */}
+        {isRoot && (
+          <Handle
+            type="source"
+            position={Position.Top}
+            id="top"
+            className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
+          />
+        )}
     </div>
   );
 }
