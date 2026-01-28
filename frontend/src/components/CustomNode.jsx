@@ -36,10 +36,10 @@ function IdeationNode({ data }) {
       <div className="px-3 pb-3 space-y-1.5">
         {Object.entries(PILLAR_LABELS).map(([key, title]) => (
           <div key={key} className="bg-stone-50 rounded-md px-3 py-2">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">
+            <div className="text-xs font-bold text-stone-700">
               {title}
             </div>
-            <div className="text-xs text-stone-700 leading-relaxed mt-0.5">
+            <div className="text-xs text-stone-500 leading-relaxed mt-0.5">
               {pillars[key] || '...'}
             </div>
           </div>
@@ -82,15 +82,15 @@ function FeatureGroupNode({ data }) {
             const colonIdx = sf.indexOf(':');
             const hasLabel = colonIdx > 0 && colonIdx < 40;
             return (
-              <div key={idx} className="bg-stone-50 rounded-md px-3 py-1.5">
-                <div className="text-xs text-stone-600 leading-relaxed">
-                  {hasLabel ? (
-                    <>
-                      <span className="font-semibold text-stone-700">{sf.slice(0, colonIdx)}</span>
-                      {sf.slice(colonIdx)}
-                    </>
-                  ) : sf}
-                </div>
+              <div key={idx} className="bg-stone-50 rounded-md px-3 py-2">
+                {hasLabel ? (
+                  <>
+                    <div className="text-xs font-semibold text-stone-700">{sf.slice(0, colonIdx)}</div>
+                    <div className="text-xs text-stone-500 leading-relaxed mt-0.5">{sf.slice(colonIdx + 1).trim()}</div>
+                  </>
+                ) : (
+                  <div className="text-xs text-stone-600 leading-relaxed">{sf}</div>
+                )}
               </div>
             );
           })}
@@ -230,7 +230,7 @@ function SystemMapNode({ data }) {
           const items = data[key] || [];
           return (
             <div key={key} className="bg-stone-50 rounded-md px-3 py-2">
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">
+              <div className="text-xs font-bold text-stone-700">
                 {label}
               </div>
               <div className="mt-1 space-y-0.5">
