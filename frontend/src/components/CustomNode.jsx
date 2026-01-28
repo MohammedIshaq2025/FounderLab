@@ -6,6 +6,72 @@ function cn(...classes) {
   return classes.filter(Boolean).join(' ');
 }
 
+/* ─── Shared card shell ─── */
+const Card = ({ children, className, accentColor }) => (
+  <div
+    className={cn(
+      'bg-white rounded-xl overflow-hidden',
+      'border border-stone-200/80',
+      'shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]',
+      className,
+    )}
+  >
+    {/* Accent strip */}
+    {accentColor && (
+      <div className="h-[2.5px]" style={{ background: accentColor }} />
+    )}
+    {children}
+  </div>
+);
+
+/* ─── Pill badge ─── */
+const TypeBadge = ({ label, color, bg }) => (
+  <span
+    className="text-[10px] font-semibold tracking-wide uppercase px-2 py-[3px] rounded-full leading-none"
+    style={{ color, backgroundColor: bg }}
+  >
+    {label}
+  </span>
+);
+
+/* ─── Section label ─── */
+const SectionLabel = ({ children }) => (
+  <div className="text-[10.5px] font-semibold uppercase tracking-[0.06em] text-stone-400 mb-1">
+    {children}
+  </div>
+);
+
+/* ─── Sub-item with optional heading:content split ─── */
+const SubItem = ({ text, className }) => {
+  const colonIdx = text.indexOf(':');
+  const hasLabel = colonIdx > 0 && colonIdx < 40;
+
+  return (
+    <div
+      className={cn(
+        'bg-stone-50/80 rounded-lg px-3 py-2 border border-stone-100',
+        className,
+      )}
+    >
+      {hasLabel ? (
+        <>
+          <div className="text-[11.5px] font-semibold text-stone-700 leading-snug">
+            {text.slice(0, colonIdx)}
+          </div>
+          <div className="text-[11.5px] text-stone-500 leading-relaxed mt-0.5">
+            {text.slice(colonIdx + 1).trim()}
+          </div>
+        </>
+      ) : (
+        <div className="text-[11.5px] text-stone-600 leading-relaxed">{text}</div>
+      )}
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   PILLAR_LABELS — shared constant for IdeationNode
+   ═══════════════════════════════════════════════════════════════════ */
 const PILLAR_LABELS = {
   core_problem: 'Core Problem',
   pain_point: 'Pain Point',
@@ -13,34 +79,37 @@ const PILLAR_LABELS = {
   current_solutions: 'Current Solutions',
 };
 
+/* ═══════════════════════════════════════════════════════════════════
+   1. IdeationNode — terra accent
+   ═══════════════════════════════════════════════════════════════════ */
 function IdeationNode({ data }) {
   const pillars = data.pillars || {};
 
   return (
-    <div className="bg-white border border-stone-200 rounded-lg shadow-sm min-w-[260px] max-w-[320px] overflow-hidden">
+    <Card accentColor="#E8613C" className="min-w-[268px] max-w-[320px]">
       <Handle
         type="target"
         position={Position.Left}
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
 
-      {/* Top accent bar */}
-      <div className="h-[3px] bg-terra-500" />
-
-      {/* Header */}
-      <div className="px-4 pt-3 pb-2">
-        <span className="text-[13px] font-semibold text-terra-600">Ideation</span>
+      <div className="px-4 pt-3.5 pb-1">
+        <span className="text-[13px] font-semibold text-stone-800 tracking-[-0.01em]">
+          Ideation
+        </span>
       </div>
 
-      {/* Pillar cards */}
-      <div className="px-3 pb-3 space-y-1.5">
+      <div className="px-3 pb-3.5 space-y-1.5">
         {Object.entries(PILLAR_LABELS).map(([key, title]) => (
-          <div key={key} className="bg-stone-50 rounded-md px-3 py-2">
-            <div className="text-xs font-bold text-stone-700">
+          <div
+            key={key}
+            className="bg-stone-50/80 rounded-lg px-3 py-2 border border-stone-100"
+          >
+            <div className="text-[11.5px] font-semibold text-stone-700 leading-snug">
               {title}
             </div>
-            <div className="text-xs text-stone-500 leading-relaxed mt-0.5">
-              {pillars[key] || '...'}
+            <div className="text-[11.5px] text-stone-500 leading-relaxed mt-0.5">
+              {pillars[key] || '\u2014'}
             </div>
           </div>
         ))}
@@ -51,49 +120,36 @@ function IdeationNode({ data }) {
         position={Position.Bottom}
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
-    </div>
+    </Card>
   );
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   2. FeatureGroupNode — amber accent
+   ═══════════════════════════════════════════════════════════════════ */
 function FeatureGroupNode({ data }) {
   const subFeatures = data.subFeatures || [];
 
   return (
-    <div className="bg-white border border-stone-200 rounded-lg shadow-sm min-w-[220px] max-w-[280px] overflow-hidden">
+    <Card accentColor="#D97706" className="min-w-[228px] max-w-[284px]">
       <Handle
         type="target"
         position={Position.Top}
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
 
-      {/* Top accent bar — amber */}
-      <div className="h-[3px] bg-amber-500" />
-
-      {/* Header */}
-      <div className="px-4 pt-3 pb-2 flex items-center gap-2">
-        <span className="text-[13px] font-semibold text-stone-800 flex-1 truncate">{data.label}</span>
-        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 whitespace-nowrap">Feature</span>
+      <div className="px-4 pt-3.5 pb-1.5 flex items-center justify-between gap-3">
+        <span className="text-[13px] font-semibold text-stone-800 tracking-[-0.01em] truncate flex-1">
+          {data.label}
+        </span>
+        <TypeBadge label="Feature" color="#B45309" bg="#FEF3C7" />
       </div>
 
-      {/* Sub-features list */}
       {subFeatures.length > 0 && (
-        <div className="px-3 pb-3 space-y-1">
-          {subFeatures.map((sf, idx) => {
-            const colonIdx = sf.indexOf(':');
-            const hasLabel = colonIdx > 0 && colonIdx < 40;
-            return (
-              <div key={idx} className="bg-stone-50 rounded-md px-3 py-2">
-                {hasLabel ? (
-                  <>
-                    <div className="text-xs font-semibold text-stone-700">{sf.slice(0, colonIdx)}</div>
-                    <div className="text-xs text-stone-500 leading-relaxed mt-0.5">{sf.slice(colonIdx + 1).trim()}</div>
-                  </>
-                ) : (
-                  <div className="text-xs text-stone-600 leading-relaxed">{sf}</div>
-                )}
-              </div>
-            );
-          })}
+        <div className="px-3 pb-3.5 space-y-1.5">
+          {subFeatures.map((sf, idx) => (
+            <SubItem key={idx} text={sf} />
+          ))}
         </div>
       )}
 
@@ -102,94 +158,101 @@ function FeatureGroupNode({ data }) {
         position={Position.Bottom}
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
-    </div>
+    </Card>
   );
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   3. ComplementaryFeaturesNode — teal accent
+   ═══════════════════════════════════════════════════════════════════ */
 function ComplementaryFeaturesNode({ data }) {
   return (
-    <div className="bg-white border border-stone-200 rounded-lg shadow-sm min-w-[220px] max-w-[280px] overflow-hidden">
+    <Card accentColor="#0D9488" className="min-w-[228px] max-w-[284px]">
       <Handle
         type="target"
         position={Position.Top}
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
-      <div className="h-[3px] bg-teal-500" />
-      <div className="px-4 pt-3 pb-2 flex items-center gap-2">
-        <span className="text-[13px] font-semibold text-stone-800 flex-1 truncate">{data.label}</span>
-        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-teal-50 text-teal-600 whitespace-nowrap">Bonus</span>
+
+      <div className="px-4 pt-3.5 pb-1.5 flex items-center justify-between gap-3">
+        <span className="text-[13px] font-semibold text-stone-800 tracking-[-0.01em] truncate flex-1">
+          {data.label}
+        </span>
+        <TypeBadge label="Bonus" color="#0F766E" bg="#CCFBF1" />
       </div>
-      <div className="px-3 pb-3 space-y-1">
-        {(data.features || []).map((f, idx) => {
-          const colonIdx = f.indexOf(':');
-          const hasLabel = colonIdx > 0 && colonIdx < 40;
-          return (
-            <div key={idx} className="bg-stone-50 rounded-md px-3 py-1.5">
-              <div className="text-xs text-stone-600 leading-relaxed">
-                {hasLabel ? (
-                  <>
-                    <span className="font-semibold text-stone-700">{f.slice(0, colonIdx)}</span>
-                    {f.slice(colonIdx)}
-                  </>
-                ) : f}
-              </div>
-            </div>
-          );
-        })}
+
+      <div className="px-3 pb-3.5 space-y-1.5">
+        {(data.features || []).map((f, idx) => (
+          <SubItem key={idx} text={f} />
+        ))}
       </div>
+
       <Handle
         type="source"
         position={Position.Bottom}
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
-    </div>
+    </Card>
   );
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   4. UIDesignNode — rose accent
+   ═══════════════════════════════════════════════════════════════════ */
 function UIDesignNode({ data }) {
   return (
-    <div className="bg-white border border-stone-200 rounded-lg shadow-sm min-w-[260px] max-w-[320px] overflow-hidden">
+    <Card accentColor="#E11D48" className="min-w-[268px] max-w-[320px]">
       <Handle
         type="target"
         position={Position.Right}
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
-      <div className="h-[3px] bg-rose-500" />
-      <div className="px-4 pt-3 pb-2">
-        <span className="text-[13px] font-semibold text-stone-800">{data.label}</span>
+
+      <div className="px-4 pt-3.5 pb-1">
+        <span className="text-[13px] font-semibold text-stone-800 tracking-[-0.01em]">
+          {data.label}
+        </span>
       </div>
-      <div className="px-3 pb-3 space-y-2">
-        <div className="bg-stone-50 rounded-md px-3 py-2">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">Theme</div>
-          <div className="text-xs text-stone-700 mt-0.5">{data.theme}</div>
+
+      <div className="px-3 pb-3.5 space-y-2">
+        {/* Theme */}
+        <div className="bg-stone-50/80 rounded-lg px-3 py-2.5 border border-stone-100">
+          <SectionLabel>Theme</SectionLabel>
+          <div className="text-[11.5px] text-stone-700 leading-relaxed">{data.theme}</div>
         </div>
-        <div className="bg-stone-50 rounded-md px-3 py-2">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">Palette</div>
-          <div className="text-xs text-stone-700 mt-0.5 mb-1.5">{data.paletteName}</div>
-          <div className="flex gap-1">
+
+        {/* Palette */}
+        <div className="bg-stone-50/80 rounded-lg px-3 py-2.5 border border-stone-100">
+          <SectionLabel>Palette</SectionLabel>
+          <div className="text-[11.5px] text-stone-700 leading-relaxed mb-2">{data.paletteName}</div>
+          <div className="flex gap-1.5">
             {(data.colors || []).map((color, idx) => (
               <div
                 key={idx}
-                className="w-6 h-6 rounded-full border border-stone-200"
+                className="w-5 h-5 rounded-full ring-1 ring-stone-200/80 ring-offset-1 ring-offset-white"
                 style={{ backgroundColor: color }}
                 title={color}
               />
             ))}
           </div>
         </div>
-        <div className="bg-stone-50 rounded-md px-3 py-2">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">Style</div>
-          <div className="text-xs text-stone-700 mt-0.5">{data.designStyle}</div>
+
+        {/* Style */}
+        <div className="bg-stone-50/80 rounded-lg px-3 py-2.5 border border-stone-100">
+          <SectionLabel>Style</SectionLabel>
+          <div className="text-[11.5px] text-stone-700 leading-relaxed">{data.designStyle}</div>
         </div>
+
+        {/* Design Guidelines */}
         {(data.designGuidelines || []).length > 0 && (
-          <div className="bg-stone-50 rounded-md px-3 py-2">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">Design Language</div>
+          <div className="bg-stone-50/80 rounded-lg px-3 py-2.5 border border-stone-100">
+            <SectionLabel>Design Language</SectionLabel>
             <div className="mt-1 space-y-1">
               {data.designGuidelines.map((g, idx) => {
                 const colonIdx = g.indexOf(':');
                 const hasLabel = colonIdx > 0 && colonIdx < 30;
                 return (
-                  <div key={idx} className="text-xs text-stone-600 leading-relaxed">
+                  <div key={idx} className="text-[11.5px] text-stone-600 leading-relaxed">
                     {hasLabel ? (
                       <>
                         <span className="font-semibold text-stone-700">{g.slice(0, colonIdx)}</span>
@@ -203,10 +266,13 @@ function UIDesignNode({ data }) {
           </div>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   5. SystemMapNode — indigo accent
+   ═══════════════════════════════════════════════════════════════════ */
 function SystemMapNode({ data }) {
   const sections = [
     { key: 'frontend', label: 'Frontend' },
@@ -215,28 +281,37 @@ function SystemMapNode({ data }) {
   ];
 
   return (
-    <div className="bg-white border border-stone-200 rounded-lg shadow-sm min-w-[302px] max-w-[372px] overflow-hidden">
+    <Card accentColor="#6366F1" className="min-w-[302px] max-w-[372px]">
       <Handle
         type="target"
         position={Position.Bottom}
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
-      <div className="h-[3px] bg-indigo-500" />
-      <div className="px-4 pt-3 pb-2">
-        <span className="text-[13px] font-semibold text-stone-800">{data.label}</span>
+
+      <div className="px-4 pt-3.5 pb-1">
+        <span className="text-[13px] font-semibold text-stone-800 tracking-[-0.01em]">
+          {data.label}
+        </span>
       </div>
-      <div className="px-3 pb-3 space-y-1.5">
+
+      <div className="px-3 pb-3.5 space-y-1.5">
         {sections.map(({ key, label }) => {
           const items = data[key] || [];
           return (
-            <div key={key} className="bg-stone-50 rounded-md px-3 py-2">
-              <div className="text-xs font-bold text-stone-700">
+            <div
+              key={key}
+              className="bg-stone-50/80 rounded-lg px-3 py-2.5 border border-stone-100"
+            >
+              <div className="text-[11.5px] font-semibold text-stone-700 leading-snug mb-1">
                 {label}
               </div>
-              <div className="mt-1 space-y-0.5">
+              <div className="space-y-0.5">
                 {items.map((item, idx) => (
-                  <div key={idx} className="text-xs text-stone-600 leading-relaxed flex items-start gap-1.5">
-                    <span className="text-stone-400 mt-px">•</span>
+                  <div
+                    key={idx}
+                    className="text-[11.5px] text-stone-500 leading-relaxed flex items-start gap-1.5"
+                  >
+                    <span className="text-stone-300 mt-[1px] select-none">&bull;</span>
                     <span>{item}</span>
                   </div>
                 ))}
@@ -245,41 +320,35 @@ function SystemMapNode({ data }) {
           );
         })}
       </div>
+
       <Handle
         type="source"
         position={Position.Top}
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
-    </div>
+    </Card>
   );
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   6. Root + Fallback — CustomNode dispatcher
+   ═══════════════════════════════════════════════════════════════════ */
 function CustomNode({ data, type }) {
-  if (type === 'ideation') {
-    return <IdeationNode data={data} />;
-  }
-  if (type === 'featureGroup') {
-    return <FeatureGroupNode data={data} />;
-  }
-  if (type === 'complementaryFeatures') {
-    return <ComplementaryFeaturesNode data={data} />;
-  }
-  if (type === 'uiDesign') {
-    return <UIDesignNode data={data} />;
-  }
-  if (type === 'systemMap') {
-    return <SystemMapNode data={data} />;
-  }
+  if (type === 'ideation') return <IdeationNode data={data} />;
+  if (type === 'featureGroup') return <FeatureGroupNode data={data} />;
+  if (type === 'complementaryFeatures') return <ComplementaryFeaturesNode data={data} />;
+  if (type === 'uiDesign') return <UIDesignNode data={data} />;
+  if (type === 'systemMap') return <SystemMapNode data={data} />;
 
   const isRoot = type === 'root';
 
   return (
     <div
       className={cn(
-        'px-4 py-3 rounded-lg border transition-all',
+        'rounded-xl border overflow-hidden transition-all',
         isRoot
-          ? 'bg-gradient-to-br from-stone-800 to-stone-900 border-stone-700 text-white min-w-[180px] max-w-[240px] shadow-lg shadow-stone-800/25'
-          : 'bg-white border-stone-200 hover:border-terra-400/50 text-stone-800 min-w-[160px] max-w-[220px] shadow-sm'
+          ? 'bg-gradient-to-br from-stone-800 via-stone-850 to-stone-900 border-stone-700/60 text-white min-w-[188px] max-w-[244px] shadow-[0_2px_8px_rgba(28,25,23,0.25),0_8px_24px_rgba(28,25,23,0.15)]'
+          : 'bg-white border-stone-200/80 text-stone-800 min-w-[168px] max-w-[224px] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]',
       )}
     >
       {!isRoot && (
@@ -290,50 +359,52 @@ function CustomNode({ data, type }) {
         />
       )}
 
-      <div className="flex items-center gap-2.5">
-        {isRoot && (
-          <div className="flex-shrink-0">
-            <Database className="w-4 h-4" />
+      <div className={cn('px-4', isRoot ? 'py-3.5' : 'py-3')}>
+        <div className="flex items-center gap-2.5">
+          {isRoot && (
+            <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
+              <Database className="w-3.5 h-3.5 text-white/80" />
+            </div>
+          )}
+          <div
+            className={cn(
+              'flex-1 truncate tracking-[-0.01em]',
+              isRoot ? 'text-[13.5px] font-bold text-white' : 'text-[13px] font-semibold text-stone-800',
+            )}
+          >
+            {data.label}
+          </div>
+        </div>
+
+        {data.description && (
+          <p
+            className={cn(
+              'text-[11.5px] leading-relaxed mt-1.5',
+              isRoot ? 'text-white/60' : 'text-stone-500',
+            )}
+          >
+            {data.description}
+          </p>
+        )}
+
+        {data.info && (
+          <div className="flex flex-wrap gap-1 mt-2.5">
+            {data.info.split(',').map((item, idx) => (
+              <span
+                key={idx}
+                className={cn(
+                  'text-[10px] font-medium px-1.5 py-0.5 rounded-md',
+                  isRoot ? 'bg-white/10 text-white/70' : 'bg-stone-100 text-stone-500',
+                )}
+              >
+                {item.trim()}
+              </span>
+            ))}
           </div>
         )}
-        <div
-          className={cn(
-            'flex-1 truncate',
-            isRoot ? 'text-sm font-bold text-white' : 'text-[13px] font-semibold text-stone-800'
-          )}
-        >
-          {data.label}
-        </div>
       </div>
 
-      {data.description && (
-        <p
-          className={cn(
-            'text-xs leading-relaxed mt-1.5',
-            isRoot ? 'text-white/70' : 'text-stone-500'
-          )}
-        >
-          {data.description}
-        </p>
-      )}
-
-      {data.info && (
-        <div className="flex flex-wrap gap-1 mt-2">
-          {data.info.split(',').map((item, idx) => (
-            <span
-              key={idx}
-              className={cn(
-                'text-[10px] px-1.5 py-0.5 rounded',
-                isRoot ? 'bg-white/15 text-white/80' : 'bg-stone-100 text-stone-500'
-              )}
-            >
-              {item.trim()}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Bottom source handle (for feature/tech/database children below) */}
+      {/* Bottom source handle */}
       <Handle
         type="source"
         position={Position.Bottom}
@@ -341,7 +412,7 @@ function CustomNode({ data, type }) {
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
 
-      {/* Right source handle (for ideation node to the right) */}
+      {/* Right source handle (for ideation node) */}
       {isRoot && (
         <Handle
           type="source"
@@ -351,7 +422,7 @@ function CustomNode({ data, type }) {
         />
       )}
 
-      {/* Left source handle (for UI design node to the left) */}
+      {/* Left source handle (for UI design node) */}
       {isRoot && (
         <Handle
           type="source"
@@ -361,7 +432,7 @@ function CustomNode({ data, type }) {
         />
       )}
 
-      {/* Top source handle (for system map node above) */}
+      {/* Top source handle (for system map node) */}
       {isRoot && (
         <Handle
           type="source"
