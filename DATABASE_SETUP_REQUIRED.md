@@ -1,43 +1,51 @@
-# 🚀 QUICK START - FounderLab Setup
+# Database Setup — FounderLab
 
-## ⚠️ CRITICAL: Run This SQL First!
+## Current State
 
-Before using the app, you MUST set up the Supabase database.
+The database schema is managed via Supabase migrations applied through the Supabase MCP tools. The following migrations have been applied:
 
-### Step 1: Open Supabase SQL Editor
+1. **Initial schema** — `projects`, `messages`, `documents` tables with indexes
+2. **`add_user_id_to_projects`** — Added `user_id UUID REFERENCES auth.users(id)` + index
+3. **`enable_rls_all_tables`** — Enabled RLS on all three tables
+4. **`create_rls_policies`** — 8 policies enforcing user ownership
 
-Go to this URL:
-```
-https://supabase.com/dashboard/project/gzenaxliwjfhtyoxnbla/sql/new
-```
-
-### Step 2: Copy and Paste This Entire SQL Script
+## Schema Overview
 
 ```sql
--- ============================================
--- FounderLab Database Schema for Supabase
--- ============================================
-
--- 1. Create projects table
-CREATE TABLE IF NOT EXISTS projects (
+-- projects table
+CREATE TABLE projects (
     id UUID PRIMARY KEY,
     name TEXT NOT NULL,
     phase INTEGER DEFAULT 1,
+    user_id UUID REFERENCES auth.users(id),
     canvas_state TEXT,
-    created_at TIMESTAMP DEFAULT NOW()
+    phase_summaries JSONB,
+    ideation_pillars JSONB,
+    feature_data JSONB,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- 2. Create messages table
-CREATE TABLE IF NOT EXISTS messages (
+CREATE INDEX idx_projects_user_id ON projects(user_id);
+CREATE INDEX idx_projects_created_at ON projects(created_at);
+
+-- messages table
+CREATE TABLE messages (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
     role TEXT NOT NULL,
     content TEXT NOT NULL,
+    phase INTEGER,
+    message_type TEXT,
+    metadata JSONB,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 3. Create documents table
-CREATE TABLE IF NOT EXISTS documents (
+CREATE INDEX idx_messages_project_id ON messages(project_id);
+CREATE INDEX idx_messages_created_at ON messages(created_at);
+
+-- documents table
+CREATE TABLE documents (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
     doc_type TEXT NOT NULL,
@@ -46,46 +54,39 @@ CREATE TABLE IF NOT EXISTS documents (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 4. Create indexes for performance
-CREATE INDEX IF NOT EXISTS idx_messages_project_id ON messages(project_id);
-CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at);
-CREATE INDEX IF NOT EXISTS idx_documents_project_id ON documents(project_id);
-CREATE INDEX IF NOT EXISTS idx_projects_created_at ON projects(created_at);
-
--- 5. Grant permissions (IMPORTANT)
-GRANT ALL ON projects TO anon, authenticated, service_role;
-GRANT ALL ON messages TO anon, authenticated, service_role;
-GRANT ALL ON documents TO anon, authenticated, service_role;
-
--- 6. Disable Row Level Security for development
-ALTER TABLE projects DISABLE ROW LEVEL SECURITY;
-ALTER TABLE messages DISABLE ROW LEVEL SECURITY;
-ALTER TABLE documents DISABLE ROW LEVEL SECURITY;
-
--- ============================================
--- Done! Setup Complete.
--- ============================================
+CREATE INDEX idx_documents_project_id ON documents(project_id);
 ```
 
-### Step 3: Click "Run" Button
+## Row Level Security
 
-After pasting the SQL, click the "Run" button in Supabase SQL Editor.
+RLS is **enabled** on all tables. Policies:
 
-### Step 4: Verify Setup
+```sql
+-- projects: CRUD restricted to owner
+CREATE POLICY "Users can view own projects" ON projects FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own projects" ON projects FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own projects" ON projects FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own projects" ON projects FOR DELETE USING (auth.uid() = user_id);
 
-Run this command to check if everything is ready:
-```bash
-python /app/scripts/status.py
+-- messages: via project ownership
+CREATE POLICY "Users can view own messages" ON messages FOR SELECT USING (
+  EXISTS (SELECT 1 FROM projects WHERE projects.id = messages.project_id AND projects.user_id = auth.uid())
+);
+CREATE POLICY "Users can insert own messages" ON messages FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM projects WHERE projects.id = messages.project_id AND projects.user_id = auth.uid())
+);
+
+-- documents: via project ownership
+CREATE POLICY "Users can view own documents" ON documents FOR SELECT USING (
+  EXISTS (SELECT 1 FROM projects WHERE projects.id = documents.project_id AND projects.user_id = auth.uid())
+);
+CREATE POLICY "Users can insert own documents" ON documents FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM projects WHERE projects.id = documents.project_id AND projects.user_id = auth.uid())
+);
 ```
 
-## ✅ That's It!
+## Authentication
 
-Once the SQL runs successfully, the preview will work and you can access your application!
+Supabase Auth is configured for email + password sign-up/sign-in. User preferences (onboarding data) are stored in `user_metadata` on the auth user record.
 
-## 🎯 Access Your App
-
-The app will be available at your preview URL after database setup is complete.
-
-## 📖 Usage Guide
-
-See `/app/QUICKSTART.md` for detailed usage instructions.
+The backend uses `SERVICE_ROLE_KEY` which bypasses RLS. All endpoints additionally filter by `user_id` for defense-in-depth.

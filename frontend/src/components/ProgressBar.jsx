@@ -1,74 +1,135 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 
-function ProgressBar({ phase, projectName, onPhaseClick }) {
-  const phases = [
-    { number: 1, name: 'Ideation', short: 'Ideation' },
-    { number: 2, name: 'Research', short: 'Research' },
-    { number: 3, name: 'Tech Stack', short: 'Tech' },
-    { number: 4, name: 'PRD', short: 'PRD' },
-    { number: 5, name: 'Export', short: 'Export' },
-  ];
+const PHASES = [
+  { number: 1, name: 'Ideation', short: 'Ideation' },
+  { number: 2, name: 'Feature Mapping', short: 'Features' },
+  { number: 3, name: 'MindMapping', short: 'MindMap' },
+  { number: 4, name: 'PRD Generation', short: 'PRD' },
+  { number: 5, name: 'Export', short: 'Export' },
+];
 
-  return (
-    <div className="bg-white border-b border-gray-200 px-8 py-4">
-      {/* Project Name */}
-      <div className="text-center mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">{projectName}</h2>
+const PHASE_COLORS = {
+  1: '#E8613C',
+  2: '#D97706',
+  3: '#0D9488',
+  4: '#BE123C',
+  5: '#059669',
+};
+
+function ProgressBar({ phase, projectName, compact = false }) {
+  // Compact inline version for header
+  if (compact) {
+    return (
+      <div className="flex items-center gap-1.5">
+        {PHASES.map((p) => {
+          const isCompleted = phase > p.number;
+          const isCurrent = phase === p.number;
+
+          return (
+            <div key={p.number} className="flex items-center gap-1.5">
+              <div
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium"
+                style={{
+                  backgroundColor: isCompleted
+                    ? '#D1FAE5'
+                    : isCurrent
+                    ? '#FDECE7'
+                    : '#F5F5F4',
+                  color: isCompleted
+                    ? '#059669'
+                    : isCurrent
+                    ? PHASE_COLORS[p.number]
+                    : '#A8A29E',
+                }}
+              >
+                {isCompleted ? (
+                  <Check className="w-3 h-3" />
+                ) : (
+                  <span>{p.number}</span>
+                )}
+                <span className="hidden lg:inline">{p.short}</span>
+              </div>
+              {p.number < PHASES.length && (
+                <div
+                  className="w-3 h-px"
+                  style={{
+                    backgroundColor: isCompleted ? '#059669' : '#D6D3D1',
+                  }}
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
+    );
+  }
 
-      {/* Progress Bar */}
-      <div className="max-w-4xl mx-auto">
+  // Full progress bar (standalone)
+  return (
+    <div className="bg-white border-b border-stone-200 px-8 py-4">
+      {projectName && (
+        <div className="text-center mb-4">
+          <h2 className="text-lg font-semibold text-stone-950">{projectName}</h2>
+        </div>
+      )}
+
+      <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between relative">
           {/* Progress Line */}
-          <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 -z-10">
-            <div 
-              className="h-full bg-[#5b0e14] transition-all duration-500"
-              style={{ width: `${((phase - 1) / (phases.length - 1)) * 100}%` }}
+          <div className="absolute top-4 left-0 right-0 h-px bg-stone-200 -z-10">
+            <div
+              className="h-full transition-all duration-500"
+              style={{
+                width: `${((phase - 1) / (PHASES.length - 1)) * 100}%`,
+                backgroundColor: '#059669',
+              }}
             />
           </div>
 
-          {/* Phase Steps */}
-          {phases.map((p, index) => {
+          {PHASES.map((p) => {
             const isCompleted = phase > p.number;
             const isCurrent = phase === p.number;
-            const isPending = phase < p.number;
 
             return (
-              <div key={p.number} className="flex flex-col items-center relative">
-                {/* Circle */}
-                <button
-                  onClick={() => onPhaseClick && onPhaseClick(p.number)}
-                  disabled={phase < p.number}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm border-2 transition-all ${
-                    isCompleted
-                      ? 'bg-[#5b0e14] border-[#5b0e14] text-white cursor-pointer hover:scale-110'
+              <div key={p.number} className="flex flex-col items-center">
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-all"
+                  style={{
+                    backgroundColor: isCompleted
+                      ? '#059669'
                       : isCurrent
-                      ? 'bg-white border-[#5b0e14] text-[#5b0e14] ring-4 ring-[#5b0e14]/20'
-                      : 'bg-white border-gray-300 text-gray-400 cursor-not-allowed'
-                  }`}
+                      ? '#FFFFFF'
+                      : '#FFFFFF',
+                    borderColor: isCompleted
+                      ? '#059669'
+                      : isCurrent
+                      ? PHASE_COLORS[p.number]
+                      : '#D6D3D1',
+                    color: isCompleted
+                      ? '#FFFFFF'
+                      : isCurrent
+                      ? PHASE_COLORS[p.number]
+                      : '#A8A29E',
+                    boxShadow: isCurrent
+                      ? `0 0 0 3px ${PHASE_COLORS[p.number]}20`
+                      : 'none',
+                  }}
                 >
-                  {isCompleted ? (
-                    <Check className="w-5 h-5" />
-                  ) : (
-                    <span>{p.number}</span>
-                  )}
-                </button>
-
-                {/* Label */}
-                <div className="mt-2 text-center">
-                  <div
-                    className={`text-xs font-medium ${
-                      isCurrent
-                        ? 'text-[#5b0e14]'
-                        : isCompleted
-                        ? 'text-gray-700'
-                        : 'text-gray-400'
-                    }`}
-                  >
-                    {p.short}
-                  </div>
+                  {isCompleted ? <Check className="w-4 h-4" /> : p.number}
                 </div>
+                <span
+                  className="mt-1.5 text-[11px] font-medium"
+                  style={{
+                    color: isCurrent
+                      ? PHASE_COLORS[p.number]
+                      : isCompleted
+                      ? '#44403C'
+                      : '#A8A29E',
+                  }}
+                >
+                  {p.short}
+                </span>
               </div>
             );
           })}

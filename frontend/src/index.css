@@ -4,32 +4,106 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 355 88% 19%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 355 88% 19%;
+    /* Warm Neutral Scale (Stone) */
+    --stone-950: #1C1917;
+    --stone-900: #1C1917;
+    --stone-850: #231F1E;
+    --stone-800: #292524;
+    --stone-700: #44403C;
+    --stone-600: #57534E;
+    --stone-500: #78716C;
+    --stone-400: #A8A29E;
+    --stone-300: #D6D3D1;
+    --stone-200: #E7E5E4;
+    --stone-100: #F5F5F4;
+    --stone-50: #FAFAF9;
+
+    /* Terracotta Accent Scale */
+    --terra-700: #A83A1F;
+    --terra-600: #C4502D;
+    --terra-500: #E8613C;
+    --terra-400: #F0845A;
+    --terra-100: #FDECE7;
+    --terra-50: #FFF7F5;
+
+    /* Phase Colors */
+    --phase-1: #E8613C;
+    --phase-1-bg: #FDECE7;
+    --phase-2: #D97706;
+    --phase-2-bg: #FEF3C7;
+    --phase-3: #0D9488;
+    --phase-3-bg: #CCFBF1;
+    --phase-4: #BE123C;
+    --phase-4-bg: #FFE4E6;
+    --phase-5: #059669;
+    --phase-5-bg: #D1FAE5;
+
+    /* Semantic */
+    --success: #059669;
+    --success-bg: #D1FAE5;
+    --warning: #D97706;
+    --warning-bg: #FEF3C7;
+    --error: #DC2626;
+    --error-bg: #FEE2E2;
+
+    /* Surfaces */
+    --background: var(--stone-50);
+    --surface: #FFFFFF;
+    --backdrop: rgba(28, 25, 23, 0.5);
+
     --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: #171412;
+    --surface: #1C1917;
+    --backdrop: rgba(0, 0, 0, 0.6);
+
+    /* Override stone scale for dark-safe inline styles */
+    --stone-200: #2A2523;
+    --stone-700: #A8A29E;
+  }
+
+  * {
+    border-color: var(--stone-200);
+  }
+
+  .dark * {
+    border-color: #2A2523;
+  }
+
+  /* Force canvas area to stay light-themed even in dark mode */
+  .dark .light-canvas,
+  .dark .light-canvas * {
+    border-color: #E7E5E4;
+  }
+  .light-canvas {
+    color-scheme: light;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--background);
+    color: var(--stone-800);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .dark body {
+    color: #D6D3D1;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
+/* Canvas edge animation — flowing dotted lines */
+.react-flow__edge-path {
+  stroke-dasharray: 5 7;
+  stroke-linecap: round;
+  stroke: #44403C !important;
+  animation: edge-flow 1.5s linear infinite;
+}
+
+@keyframes edge-flow {
+  to {
+    stroke-dashoffset: -12;
   }
 }
