@@ -102,7 +102,7 @@ This document records the founder's confirmed design preferences. Reference befo
 - **Root** (`root`): Dark stone-800, Sparkles icon. Has Bottom + Right + Left + Top source handles.
 - **Ideation** (`ideation`): Terra accent bar, Lightbulb icon, 4 pillar cards. Left target handle. Positioned to the right of root, shifted up. Edge: root Right → ideation Left.
 - **Feature Group** (`featureGroup`): Amber accent bar, Box icon, sub-features list with bold labels before colon. Top target handle. Positioned horizontally below root.
-- **Complementary Features** (`complementaryFeatures`): Teal accent bar, Puzzle icon, bulleted feature list. Bottom target handle. Positioned above-right of root.
+- **Complementary Features** (`complementaryFeatures`): Violet accent bar (#7C3AED), Puzzle icon, bulleted feature list. Bottom target handle. Positioned above-right of root.
 - **UI Design** (`uiDesign`): Rose accent bar, Palette icon. Shows theme, palette (color swatches), design style, and 3 design guidelines. Right target + Left source handles. Positioned to the left of root. Edge: root Left → uiDesign Right.
 - **System Map** (`systemMap`): Indigo-500 accent bar, Server icon. 3 sections: Frontend, Backend, Database — each a bulleted list of tech items. Bottom target + Top source handles. Positioned directly above root. Edge: root Top → systemMap Bottom.
 - **Feature** (`feature`): White card, Box icon, terra hover border.
@@ -185,6 +185,18 @@ This document records the founder's confirmed design preferences. Reference befo
 | Bot chat bubbles | `bg-white border-stone-200` | `bg-stone-900 border-stone-800` |
 | Send button | `bg-stone-800` | `bg-stone-700` |
 | Phase indicators | Phase-specific + light bg | Phase-specific + dark bg variants |
+
+---
+
+## Phase Color Reference
+
+| Phase | Name | Accent Color | Light Background | Dark Background |
+|-------|------|--------------|------------------|-----------------|
+| 1 | Ideation | `#E8613C` (terra) | `#FDEBE6` | `#2D1A15` |
+| 2 | Feature Mapping | `#D97706` (amber) | `#FEF3C7` | `#2D2305` |
+| 3 | MindMapping | `#7C3AED` (violet) | `#EDE9FE` | `#251539` |
+| 4 | PRD Generation | `#BE123C` (rose) | `#FFE4E6` | `#2D1318` |
+| 5 | Export | `#0D9488` (teal) | `#CCFBF1` | `#0A2D29` |
 | Sidebar section labels | `text-stone-400` | `text-stone-400` (same) |
 | Interactive hover | `hover:bg-stone-50` | `hover:bg-stone-800` |
 | Borders | `border-stone-200` | `border-color: #2A2523` |

@@ -397,3 +397,50 @@
 - `frontend/src/components/CustomNode.jsx` — SystemMapNode component, Server icon import, root Top handle, dispatcher
 - `frontend/src/components/CanvasView.jsx` — systemMap node type registration
 - `frontend/src/components/ChatWorkspace.jsx` — mindmapComplete state, Step 5 auto-trigger, handleContinueToPrd, Continue button logic, refresh recovery, VALID_NODE_TYPES, edge handling
+
+---
+
+## 2026-01-29 — Project Search, Phase Color Refinements & Progress Bar Consistency
+
+### Dashboard — Project Search
+
+- **Search bar**: Added working search bar to projects page header. Search icon (`Lucide Search`) with text input. Filters projects by name (case-insensitive).
+- **Empty state**: When search yields no results, displays "No projects match your search" message with clear search button.
+- **Layout**: Search bar positioned center of header with `flex-1 max-w-md mx-8` for balanced spacing.
+
+### Phase Color Updates
+
+- **Phase 3 (MindMapping)**: Changed from teal (`#0D9488`) to violet (`#7C3AED`) to better differentiate from Phase 5.
+- **Phase 5 (Export)**: Changed from emerald (`#10B981`) to teal (`#0D9488`) as requested by user.
+- **Reason**: Emerald and teal were too similar, causing visual confusion in progress indicators.
+
+### Color Token Updates
+
+Files updated:
+- `frontend/tailwind.config.js` — Updated `phase-3`, `phase-3-bg`, `phase-3-bg-dark`, `phase-5`, `phase-5-bg`, `phase-5-bg-dark` tokens
+- `frontend/src/index.css` — Updated CSS variables `--phase-3`, `--phase-3-bg`, `--phase-5`, `--phase-5-bg`
+- `frontend/src/components/ProgressBar.jsx` — Updated `PHASE_COLORS` constant
+- `frontend/src/components/Dashboard.jsx` — Updated `getPhaseColor()` and `getPhaseAccent()` functions
+- `frontend/src/components/ChatWorkspace.jsx` — Updated `PHASE_COLORS` constant
+
+### Progress Bar Opacity Fix
+
+- **Issue**: Completed projects showed inconsistent color shading across progress bar segments (completed segments had varying opacity).
+- **Fix**: Changed segment opacity from `isActive ? (p === project.phase ? 1 : 0.35) : 0.3` to `isActive ? 1 : 0.3` — all active segments now render at full opacity.
+- **Result**: Progress bar shows consistent color across all completed phases.
+
+### Documentation
+
+- **CLAUDE.md**: Added GitHub credentials (Username: MohammedIshaq2025, Email: iansari.070201@gmail.com)
+- **design.md**: Added Phase Color Reference table with all 5 phase colors and their light/dark background variants
+
+### Files Changed
+
+- `CLAUDE.md` — Added GitHub credentials section
+- `design.md` — Updated Complementary Features node color, added Phase Color Reference table
+- `progress.md` — This entry
+- `frontend/tailwind.config.js` — Phase color token updates
+- `frontend/src/index.css` — Phase CSS variable updates
+- `frontend/src/components/Dashboard.jsx` — Search bar, phase colors, progress bar opacity fix
+- `frontend/src/components/ProgressBar.jsx` — Phase color updates
+- `frontend/src/components/ChatWorkspace.jsx` — Phase color updates
