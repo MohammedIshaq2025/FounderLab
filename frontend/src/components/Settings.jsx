@@ -9,16 +9,23 @@ import {
   Monitor,
   Moon,
   Sun,
+  Database,
+  UserX,
+  Loader2,
 } from 'lucide-react';
 import ConfirmationModal from './ConfirmationModal';
 import { applyTheme } from '../theme';
 import { useAuth } from '../context/AuthContext';
+import api from '../lib/api';
 
 function Settings() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [showDeleteDataModal, setShowDeleteDataModal] = useState(false);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(null); // 'data' | 'account' | null
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteSuccess, setDeleteSuccess] = useState('');
   const [theme, setTheme] = useState(
     () => localStorage.getItem('founderlab_theme') || 'light'
   );
@@ -54,17 +61,51 @@ function Settings() {
     applyTheme();
   };
 
-  const handleDeleteData = () => {
-    localStorage.removeItem('founderlab_projects');
-    navigate('/');
+  const handleDeleteData = async () => {
+    setDeleteLoading('data');
+    setDeleteError('');
+    setDeleteSuccess('');
+    try {
+      const response = await api.post('/api/account/delete-data');
+      const { deleted } = response.data;
+
+      // Clear local caches
+      localStorage.removeItem('founderlab_projects');
+      localStorage.removeItem('founderlab_starred');
+
+      setDeleteSuccess(
+        `Deleted ${deleted.projects} project${deleted.projects !== 1 ? 's' : ''}, ` +
+        `${deleted.messages} message${deleted.messages !== 1 ? 's' : ''}, and ` +
+        `${deleted.documents} document${deleted.documents !== 1 ? 's' : ''}.`
+      );
+    } catch (err) {
+      const message = err.response?.data?.detail || err.message || 'Failed to delete data. Please try again.';
+      setDeleteError(message);
+    } finally {
+      setDeleteLoading(null);
+    }
   };
 
   const handleDeleteAccount = async () => {
-    const currentTheme = localStorage.getItem('founderlab_theme');
-    localStorage.clear();
-    if (currentTheme) localStorage.setItem('founderlab_theme', currentTheme);
-    await signOut();
-    navigate('/auth', { replace: true });
+    setDeleteLoading('account');
+    setDeleteError('');
+    setDeleteSuccess('');
+    try {
+      await api.post('/api/account/delete');
+
+      // Clear all local storage, preserve theme
+      const currentTheme = localStorage.getItem('founderlab_theme');
+      localStorage.clear();
+      if (currentTheme) localStorage.setItem('founderlab_theme', currentTheme);
+
+      // Sign out the client session
+      await signOut();
+      navigate('/auth', { replace: true });
+    } catch (err) {
+      const message = err.response?.data?.detail || err.message || 'Failed to delete account. Please try again.';
+      setDeleteError(message);
+      setDeleteLoading(null);
+    }
   };
 
   return (
@@ -124,7 +165,7 @@ function Settings() {
                 <div>
                   <p className="text-[14px] font-medium text-stone-800 dark:text-stone-200">Referral Source</p>
                   <p className="text-[13px] text-stone-500 dark:text-stone-400 mt-0.5">
-                    {referralLabels[referralSource] || 'Not set'}
+                    {referralLabels[referralSource] || referralSource || 'Not set'}
                   </p>
                 </div>
               </div>
@@ -162,6 +203,18 @@ function Settings() {
             </div>
           </section>
 
+          {/* Status Messages */}
+          {deleteError && (
+            <div className="px-4 py-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl text-[13px] text-red-600 dark:text-red-400">
+              {deleteError}
+            </div>
+          )}
+          {deleteSuccess && (
+            <div className="px-4 py-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl text-[13px] text-emerald-600 dark:text-emerald-400">
+              {deleteSuccess}
+            </div>
+          )}
+
           {/* Danger Zone */}
           <section>
             <div className="flex items-center gap-2 mb-4">
@@ -172,34 +225,52 @@ function Settings() {
             </div>
 
             <div className="bg-white dark:bg-stone-900 rounded-xl border border-red-200 dark:border-red-500/20 divide-y divide-red-100 dark:divide-red-500/10">
+              {/* Delete Data */}
               <div className="flex items-center justify-between px-5 py-4">
-                <div>
-                  <p className="text-[14px] font-medium text-stone-800 dark:text-stone-200">Delete Account Data</p>
-                  <p className="text-[13px] text-stone-500 dark:text-stone-400 mt-0.5">
-                    Remove all locally cached project data
+                <div className="flex-1 mr-4">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <Database className="w-3.5 h-3.5 text-stone-500 dark:text-stone-400" />
+                    <p className="text-[14px] font-medium text-stone-800 dark:text-stone-200">Delete All Data</p>
+                  </div>
+                  <p className="text-[13px] text-stone-500 dark:text-stone-400 mt-0.5 leading-relaxed">
+                    Permanently delete all your projects, messages, and documents from the server. Your account will remain active.
                   </p>
                 </div>
                 <button
                   onClick={() => setShowDeleteDataModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition"
+                  disabled={deleteLoading !== null}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  {deleteLoading === 'data' ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-3.5 h-3.5" />
+                  )}
                   Delete Data
                 </button>
               </div>
 
+              {/* Delete Account */}
               <div className="flex items-center justify-between px-5 py-4">
-                <div>
-                  <p className="text-[14px] font-medium text-stone-800 dark:text-stone-200">Delete Account</p>
-                  <p className="text-[13px] text-stone-500 dark:text-stone-400 mt-0.5">
-                    Permanently reset all settings and preferences
+                <div className="flex-1 mr-4">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <UserX className="w-3.5 h-3.5 text-stone-500 dark:text-stone-400" />
+                    <p className="text-[14px] font-medium text-stone-800 dark:text-stone-200">Delete Account</p>
+                  </div>
+                  <p className="text-[13px] text-stone-500 dark:text-stone-400 mt-0.5 leading-relaxed">
+                    Permanently delete your account and all associated data. This action is irreversible — you will need to create a new account to use FounderLab again.
                   </p>
                 </div>
                 <button
                   onClick={() => setShowDeleteAccountModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition"
+                  disabled={deleteLoading !== null}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  {deleteLoading === 'account' ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-3.5 h-3.5" />
+                  )}
                   Delete Account
                 </button>
               </div>
@@ -212,9 +283,13 @@ function Settings() {
         isOpen={showDeleteDataModal}
         onClose={() => setShowDeleteDataModal(false)}
         onConfirm={handleDeleteData}
-        title="Delete Account Data"
-        message="This will remove all locally cached project data. Your projects stored on the server will not be affected."
-        confirmText="Delete Data"
+        title="Delete All Data"
+        message={
+          <>
+            This will permanently delete <span className="font-semibold text-stone-700 dark:text-stone-300">all your projects, messages, and documents</span> from the server. Your account will remain active so you can start fresh. This cannot be undone.
+          </>
+        }
+        confirmText="Delete All Data"
         cancelText="Cancel"
         variant="destructive"
         icon="trash"
@@ -225,7 +300,11 @@ function Settings() {
         onClose={() => setShowDeleteAccountModal(false)}
         onConfirm={handleDeleteAccount}
         title="Delete Account"
-        message="This will permanently reset all your settings, preferences, and local data. You will be redirected to the onboarding screen."
+        message={
+          <>
+            This will permanently delete <span className="font-semibold text-stone-700 dark:text-stone-300">your account and all associated data</span> (projects, messages, documents). You will be signed out and will need to create a new account to use FounderLab again. This cannot be undone.
+          </>
+        }
         confirmText="Delete Account"
         cancelText="Cancel"
         variant="destructive"

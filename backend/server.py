@@ -1810,7 +1810,7 @@ async def advance_phase(project_id: str, request: AdvancePhaseRequest, backgroun
                 canvas_state["nodes"].append({
                     "id": "ideation",
                     "type": "ideation",
-                    "position": {"x": root_x + 318, "y": root_y - 314},
+                    "position": {"x": root_x + 318, "y": root_y - 264},
                     "data": {
                         "label": "Ideation",
                         "pillars": ideation_data or {}
@@ -2171,6 +2171,68 @@ async def download_document(file_path: str):
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(file_path)
+
+## ─── Account Management ─────────────────────────────────────────
+
+@app.post("/api/account/delete-data")
+async def delete_account_data(user_id: str = Depends(get_current_user)):
+    """Delete all user data (projects, messages, documents) but keep the account."""
+    try:
+        # Get all user projects first
+        projects_result = supabase.table("projects").select("id").eq("user_id", user_id).execute()
+        project_ids = [p["id"] for p in (projects_result.data or [])]
+
+        deleted_projects = 0
+        deleted_messages = 0
+        deleted_documents = 0
+
+        # Delete children for each project, then the project itself
+        for pid in project_ids:
+            docs_result = supabase.table("documents").delete().eq("project_id", pid).execute()
+            deleted_documents += len(docs_result.data or [])
+
+            msgs_result = supabase.table("messages").delete().eq("project_id", pid).execute()
+            deleted_messages += len(msgs_result.data or [])
+
+            supabase.table("projects").delete().eq("id", pid).execute()
+            deleted_projects += 1
+
+        return {
+            "success": True,
+            "deleted": {
+                "projects": deleted_projects,
+                "messages": deleted_messages,
+                "documents": deleted_documents,
+            },
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/account/delete")
+async def delete_account(user_id: str = Depends(get_current_user)):
+    """Permanently delete user account and all associated data."""
+    try:
+        # Step 1: Delete all user data (same logic as delete-data)
+        projects_result = supabase.table("projects").select("id").eq("user_id", user_id).execute()
+        project_ids = [p["id"] for p in (projects_result.data or [])]
+
+        for pid in project_ids:
+            supabase.table("documents").delete().eq("project_id", pid).execute()
+            supabase.table("messages").delete().eq("project_id", pid).execute()
+            supabase.table("projects").delete().eq("id", pid).execute()
+
+        # Step 2: Delete the auth user (requires service role key)
+        supabase.auth.admin.delete_user(user_id)
+
+        return {"success": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 if __name__ == "__main__":
     import uvicorn

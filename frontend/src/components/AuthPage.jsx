@@ -6,7 +6,6 @@ import {
   Lock,
   User,
   ArrowRight,
-  CheckCircle2,
   Quote,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -42,6 +41,208 @@ function GoogleIcon() {
       <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
       <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
     </svg>
+  );
+}
+
+/* ─── Email Confirmation Illustration ──────────────────────────── */
+
+function ConfirmationView({ email, onBackToSignIn }) {
+  const [stage, setStage] = useState(0);
+
+  useEffect(() => {
+    // Orchestrated reveal: 0→icon, 1→check, 2→text, 3→email card, 4→subtext, 5→CTA
+    const timers = [
+      setTimeout(() => setStage(1), 200),
+      setTimeout(() => setStage(2), 600),
+      setTimeout(() => setStage(3), 900),
+      setTimeout(() => setStage(4), 1150),
+      setTimeout(() => setStage(5), 1400),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center text-center">
+      {/* Animated icon cluster */}
+      <div className="relative w-24 h-24 mb-10">
+        {/* Outer pulse ring */}
+        <div
+          className="absolute inset-0 rounded-full transition-all duration-1000 ease-out"
+          style={{
+            background: 'radial-gradient(circle, rgba(232,97,60,0.08) 0%, transparent 70%)',
+            transform: stage >= 1 ? 'scale(1.6)' : 'scale(0.8)',
+            opacity: stage >= 1 ? 1 : 0,
+          }}
+        />
+
+        {/* Inner glow ring */}
+        <div
+          className="absolute inset-2 rounded-full transition-all duration-700 ease-out delay-100"
+          style={{
+            background: 'radial-gradient(circle, rgba(232,97,60,0.05) 0%, transparent 70%)',
+            transform: stage >= 1 ? 'scale(1.3)' : 'scale(0.9)',
+            opacity: stage >= 1 ? 1 : 0,
+          }}
+        />
+
+        {/* Envelope body */}
+        <div
+          className="absolute inset-0 flex items-center justify-center transition-all duration-700 ease-out"
+          style={{
+            transform: stage >= 1 ? 'scale(1) translateY(0)' : 'scale(0.6) translateY(12px)',
+            opacity: stage >= 1 ? 1 : 0,
+          }}
+        >
+          <svg
+            width="56"
+            height="56"
+            viewBox="0 0 56 56"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="drop-shadow-sm"
+          >
+            {/* Envelope back */}
+            <rect
+              x="6" y="16" width="44" height="30" rx="4"
+              className="fill-white dark:fill-stone-800 stroke-stone-200 dark:stroke-stone-700"
+              strokeWidth="1.5"
+            />
+
+            {/* Envelope flap — folds open */}
+            <path
+              d="M6 20 L28 34 L50 20"
+              className="stroke-stone-300 dark:stroke-stone-600"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+              style={{
+                transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                transformOrigin: '28px 20px',
+                transform: stage >= 2 ? 'scaleY(0.85)' : 'scaleY(1)',
+                opacity: stage >= 1 ? 1 : 0,
+              }}
+            />
+
+            {/* Letter emerging */}
+            <rect
+              x="14" y="10" width="28" height="24" rx="3"
+              className="fill-stone-50 dark:fill-stone-750 stroke-stone-200 dark:stroke-stone-600"
+              strokeWidth="1"
+              style={{
+                transition: 'all 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                transform: stage >= 2 ? 'translateY(-6px)' : 'translateY(8px)',
+                opacity: stage >= 2 ? 1 : 0,
+              }}
+            />
+
+            {/* Checkmark on letter — stroke draw animation */}
+            <path
+              d="M22 22 L26 26 L34 18"
+              fill="none"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{
+                stroke: '#E8613C',
+                strokeDasharray: 20,
+                strokeDashoffset: stage >= 2 ? 0 : 20,
+                transition: 'stroke-dashoffset 0.6s cubic-bezier(0.65, 0, 0.35, 1) 0.3s',
+                transform: stage >= 2 ? 'translateY(-6px)' : 'translateY(8px)',
+              }}
+            />
+          </svg>
+        </div>
+
+        {/* Sparkle accents */}
+        {[
+          { x: '8%', y: '15%', delay: '0.8s', size: 3 },
+          { x: '82%', y: '10%', delay: '1s', size: 2.5 },
+          { x: '90%', y: '65%', delay: '1.2s', size: 2 },
+        ].map((spark, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full bg-terra-500"
+            style={{
+              left: spark.x,
+              top: spark.y,
+              width: spark.size * 2,
+              height: spark.size * 2,
+              opacity: stage >= 2 ? 0.6 : 0,
+              transform: stage >= 2 ? 'scale(1)' : 'scale(0)',
+              transition: `all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) ${spark.delay}`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Heading */}
+      <h1
+        className="text-[28px] font-bold tracking-tight text-stone-950 dark:text-stone-50 mb-3 transition-all duration-600 ease-out"
+        style={{
+          opacity: stage >= 3 ? 1 : 0,
+          transform: stage >= 3 ? 'translateY(0)' : 'translateY(12px)',
+        }}
+      >
+        Check your email
+      </h1>
+
+      <p
+        className="text-[15px] text-stone-500 dark:text-stone-400 leading-relaxed mb-5 max-w-xs transition-all duration-600 ease-out"
+        style={{
+          opacity: stage >= 3 ? 1 : 0,
+          transform: stage >= 3 ? 'translateY(0)' : 'translateY(10px)',
+          transitionDelay: '80ms',
+        }}
+      >
+        We've sent a confirmation link to
+      </p>
+
+      {/* Email card */}
+      <div
+        className="mb-6 px-5 py-3 rounded-xl bg-white dark:bg-stone-800/80 border border-stone-200 dark:border-stone-700 shadow-sm transition-all duration-600 ease-out"
+        style={{
+          opacity: stage >= 4 ? 1 : 0,
+          transform: stage >= 4 ? 'translateY(0) scale(1)' : 'translateY(8px) scale(0.97)',
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-terra-50 dark:bg-terra-500/10 flex items-center justify-center flex-shrink-0">
+            <Mail className="w-4 h-4 text-terra-500" />
+          </div>
+          <span className="text-[15px] font-semibold text-stone-800 dark:text-stone-200">
+            {email}
+          </span>
+        </div>
+      </div>
+
+      {/* Instructions */}
+      <p
+        className="text-[13px] text-stone-400 dark:text-stone-500 mb-8 max-w-[280px] leading-relaxed transition-all duration-600 ease-out"
+        style={{
+          opacity: stage >= 4 ? 1 : 0,
+          transform: stage >= 4 ? 'translateY(0)' : 'translateY(8px)',
+          transitionDelay: '80ms',
+        }}
+      >
+        Click the link in the email to verify your account.
+        Once confirmed, you'll be able to sign in and start building.
+      </p>
+
+      {/* CTA */}
+      <button
+        onClick={onBackToSignIn}
+        className="group text-sm font-semibold text-terra-500 hover:text-terra-600 transition-all duration-200 flex items-center gap-1.5"
+        style={{
+          opacity: stage >= 5 ? 1 : 0,
+          transform: stage >= 5 ? 'translateY(0)' : 'translateY(6px)',
+          transition: 'opacity 0.5s ease-out, transform 0.5s ease-out, color 0.2s',
+        }}
+      >
+        Back to Sign In
+        <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+      </button>
+    </div>
   );
 }
 
@@ -194,13 +395,9 @@ function AuthPage() {
         {/* Logo */}
         <div className="pt-8 pb-4">
           <Reveal index={0}>
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-[10px] bg-stone-800 dark:bg-stone-700 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">F</span>
-              </div>
-              <span className="text-[15px] font-semibold text-stone-800 dark:text-stone-200 tracking-tight">
-                Founder Lab
-              </span>
+            <div className="flex items-center">
+              <img src="/logo-black.svg" alt="FounderLab" className="h-12 dark:hidden" />
+              <img src="/logo-white.svg" alt="FounderLab" className="h-12 hidden dark:block" />
             </div>
           </Reveal>
         </div>
@@ -211,33 +408,10 @@ function AuthPage() {
             {/* ── Confirmation State ────────────────────────────── */}
             {mode === 'confirmation' && (
               <div key="confirmation">
-                <Reveal index={0}>
-                  <div className="flex flex-col items-center text-center">
-                    <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center mb-6">
-                      <CheckCircle2 className="w-7 h-7 text-emerald-500" />
-                    </div>
-                    <h1 className="text-[28px] font-bold tracking-tight text-stone-950 dark:text-stone-50 mb-2">
-                      Check your email
-                    </h1>
-                    <p className="text-[15px] text-stone-500 dark:text-stone-400 leading-relaxed mb-2 max-w-xs">
-                      We've sent a confirmation link to
-                    </p>
-                    <p className="text-[15px] font-semibold text-stone-800 dark:text-stone-200 mb-8">
-                      {email}
-                    </p>
-                    <p className="text-[13px] text-stone-400 dark:text-stone-500 mb-8 max-w-xs leading-relaxed">
-                      Click the link in the email to verify your account.
-                      Once confirmed, you'll be able to sign in and start building.
-                    </p>
-                    <button
-                      onClick={() => switchMode('signin')}
-                      className="group text-sm font-semibold text-terra-500 hover:text-terra-600 transition-colors duration-200 flex items-center gap-1.5"
-                    >
-                      Back to Sign In
-                      <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
-                    </button>
-                  </div>
-                </Reveal>
+                <ConfirmationView
+                  email={email}
+                  onBackToSignIn={() => switchMode('signin')}
+                />
               </div>
             )}
 

@@ -14,6 +14,7 @@ import {
   LogOut,
   Folder,
   Star,
+  Search,
 } from 'lucide-react';
 import ConfirmationModal from './ConfirmationModal';
 import { useAuth } from '../context/AuthContext';
@@ -30,6 +31,7 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
     } catch { return []; }
   });
   const [showAccountPopup, setShowAccountPopup] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const accountRef = useRef(null);
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -66,9 +68,9 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
     const colors = {
       1: 'bg-phase-1-bg dark:bg-phase-1-bg-dark text-[#E8613C]',
       2: 'bg-phase-2-bg dark:bg-phase-2-bg-dark text-[#D97706]',
-      3: 'bg-phase-3-bg dark:bg-phase-3-bg-dark text-[#0D9488]',
+      3: 'bg-phase-3-bg dark:bg-phase-3-bg-dark text-[#7C3AED]',
       4: 'bg-phase-4-bg dark:bg-phase-4-bg-dark text-[#BE123C] dark:text-[#F43F5E]',
-      5: 'bg-phase-5-bg dark:bg-phase-5-bg-dark text-[#059669]',
+      5: 'bg-phase-5-bg dark:bg-phase-5-bg-dark text-[#0D9488]',
     };
     return colors[phase] || colors[1];
   };
@@ -77,9 +79,9 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
     const colors = {
       1: '#E8613C',
       2: '#D97706',
-      3: '#0D9488',
+      3: '#7C3AED',
       4: '#BE123C',
-      5: '#059669',
+      5: '#0D9488',
     };
     return colors[phase] || colors[1];
   };
@@ -135,11 +137,16 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
     sidebarFilter === 'starred'
       ? projects.filter((p) => starredIds.includes(p.id))
       : [...projects]
-  ).sort((a, b) => {
-    const dateA = new Date(a.updated_at || a.last_updated || a.created_at || 0);
-    const dateB = new Date(b.updated_at || b.last_updated || b.created_at || 0);
-    return dateB - dateA;
-  });
+  )
+    .filter((p) =>
+      searchQuery.trim() === '' ||
+      p.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      const dateA = new Date(a.updated_at || a.last_updated || a.created_at || 0);
+      const dateB = new Date(b.updated_at || b.last_updated || b.created_at || 0);
+      return dateB - dateA;
+    });
 
   const handleLogout = async () => {
     await signOut();
@@ -163,17 +170,27 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
             onClick={() => navigate('/')}
             className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
           >
-            <div className="w-8 h-8 bg-stone-800 dark:bg-stone-700 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">F</span>
-            </div>
-            <span className="text-[15px] font-semibold text-stone-950 dark:text-stone-100 tracking-tight">
-              FounderLab
-            </span>
+            <img src="/logo-black.svg" alt="FounderLab" className="h-12 dark:hidden" />
+            <img src="/logo-white.svg" alt="FounderLab" className="h-12 hidden dark:block" />
           </button>
+
+          {/* Search Bar */}
+          <div className="flex-1 max-w-md mx-8">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search projects..."
+                className="w-full pl-10 pr-4 py-2 bg-stone-100 dark:bg-stone-800 border border-transparent focus:border-stone-300 dark:focus:border-stone-600 rounded-lg text-sm text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-stone-200 dark:focus:ring-stone-700 transition-all"
+              />
+            </div>
+          </div>
 
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-terra-500 text-white rounded-lg text-[13px] font-semibold hover:bg-terra-600 active:scale-[0.97] transition-all"
+            className="btn-primary flex items-center gap-2 px-4 py-2.5 bg-terra-500 text-white rounded-lg text-[13px] font-semibold hover:bg-terra-600"
           >
             <Plus className="w-4 h-4" />
             New Project
@@ -207,13 +224,13 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
             <div className="px-2 pb-2 space-y-0.5">
               <button
                 onClick={() => setSidebarFilter('all')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors ${
+                className={`sidebar-btn w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left ${
                   sidebarFilter === 'all'
                     ? 'bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-stone-100'
                     : 'text-stone-600 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800/60 hover:text-stone-800 dark:hover:text-stone-200'
                 }`}
               >
-                <Folder className={`w-4 h-4 ${sidebarFilter === 'all' ? 'text-stone-700 dark:text-stone-300' : 'text-stone-400'}`} />
+                <Folder className={`w-4 h-4 transition-colors ${sidebarFilter === 'all' ? 'text-stone-700 dark:text-stone-300' : 'text-stone-400'}`} />
                 <span className="text-[13px] font-medium">All Projects</span>
                 <span className={`ml-auto text-[11px] font-medium ${sidebarFilter === 'all' ? 'text-stone-500 dark:text-stone-400' : 'text-stone-400'}`}>
                   {projects.length}
@@ -221,13 +238,13 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
               </button>
               <button
                 onClick={() => setSidebarFilter('starred')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors ${
+                className={`sidebar-btn w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left ${
                   sidebarFilter === 'starred'
                     ? 'bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-stone-100'
                     : 'text-stone-600 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800/60 hover:text-stone-800 dark:hover:text-stone-200'
                 }`}
               >
-                <Star className={`w-4 h-4 ${sidebarFilter === 'starred' ? 'text-amber-500' : 'text-stone-400'}`} />
+                <Star className={`w-4 h-4 transition-colors ${sidebarFilter === 'starred' ? 'text-amber-500' : 'text-stone-400'}`} />
                 <span className="text-[13px] font-medium">Starred</span>
                 <span className={`ml-auto text-[11px] font-medium ${sidebarFilter === 'starred' ? 'text-stone-500 dark:text-stone-400' : 'text-stone-400'}`}>
                   {starredIds.filter((id) => projects.some((p) => p.id === id)).length}
@@ -297,7 +314,7 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
             </button>
           )}
 
-          <div className="max-w-4xl mx-auto px-8 py-10">
+          <div className={`px-8 py-10 ${projects.length > 0 ? 'max-w-4xl mx-auto' : ''}`}>
             <div className="mb-8">
               <h1 className="text-[28px] font-bold tracking-tight text-stone-950 dark:text-stone-100">
                 {sidebarFilter === 'starred' ? 'Starred Projects' : 'Your Projects'}
@@ -312,29 +329,28 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
             {filteredProjects.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24">
                 <div className="w-16 h-16 bg-stone-100 dark:bg-stone-800 rounded-2xl flex items-center justify-center mb-5">
-                  {sidebarFilter === 'starred' ? (
+                  {searchQuery.trim() !== '' ? (
+                    <Search className="w-8 h-8 text-stone-400" />
+                  ) : sidebarFilter === 'starred' ? (
                     <Star className="w-8 h-8 text-stone-400" />
                   ) : (
                     <Sparkles className="w-8 h-8 text-stone-400" />
                   )}
                 </div>
                 <h3 className="text-lg font-semibold text-stone-950 dark:text-stone-100 mb-1">
-                  {sidebarFilter === 'starred' ? 'No starred projects' : 'No projects yet'}
+                  {searchQuery.trim() !== ''
+                    ? 'No matching projects'
+                    : sidebarFilter === 'starred'
+                    ? 'No starred projects'
+                    : 'No projects yet'}
                 </h3>
-                <p className="text-sm text-stone-500 dark:text-stone-400 mb-6">
-                  {sidebarFilter === 'starred'
+                <p className="text-sm text-stone-500 dark:text-stone-400">
+                  {searchQuery.trim() !== ''
+                    ? `No projects found for "${searchQuery}"`
+                    : sidebarFilter === 'starred'
                     ? 'Star a project to bookmark it here'
                     : 'Create your first project to get started'}
                 </p>
-                {sidebarFilter !== 'starred' && (
-                  <button
-                    onClick={() => setShowModal(true)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-terra-500 text-white rounded-lg text-sm font-semibold hover:bg-terra-600 active:scale-[0.97] transition-all"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Create Project
-                  </button>
-                )}
               </div>
             ) : (
               <div className="space-y-3">
@@ -342,23 +358,22 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
                   <div
                     key={project.id}
                     onClick={() => navigate(`/project/${project.id}`)}
-                    className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-5 hover:border-stone-300 dark:hover:border-stone-700 hover:shadow-[0_2px_12px_rgba(0,0,0,0.04)] dark:hover:shadow-[0_2px_16px_rgba(0,0,0,0.2)] cursor-pointer group transition-all duration-200"
-                    style={{ animationDelay: `${index * 50}ms` }}
+                    className="project-card bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-5 cursor-pointer group"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-3">
-                          <h3 className="text-[15px] font-semibold text-stone-950 dark:text-stone-100 truncate group-hover:text-terra-500 transition-colors">
+                          <h3 className="text-[15px] font-semibold text-stone-950 dark:text-stone-100 truncate group-hover:text-terra-500 transition-colors duration-200">
                             {project.name}
                           </h3>
                           <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold flex-shrink-0 ${getPhaseColor(project.phase)}`}
+                            className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${getPhaseColor(project.phase)}`}
                           >
                             {getPhaseName(project.phase)}
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-5 text-[13px] text-stone-400">
+                        <div className="flex items-center gap-5 text-[13px] text-stone-400 dark:text-stone-500">
                           <div className="flex items-center gap-1.5">
                             <Calendar className="w-3.5 h-3.5" />
                             <span>Created {formatDate(project.created_at)}</span>
@@ -375,15 +390,15 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5 flex-shrink-0 pt-0.5">
+                      <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleStar(project.id);
                           }}
-                          className={`p-1.5 rounded-lg transition-all ${
+                          className={`star-btn p-1.5 rounded-lg ${
                             starredIds.includes(project.id)
-                              ? 'text-amber-500 hover:text-amber-600'
+                              ? 'text-amber-500 hover:text-amber-600 starred'
                               : 'opacity-0 group-hover:opacity-100 text-stone-400 hover:text-amber-500'
                           }`}
                           title={starredIds.includes(project.id) ? 'Unstar' : 'Star'}
@@ -398,12 +413,12 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
                             e.stopPropagation();
                             setProjectToDelete(project);
                           }}
-                          className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                          className="delete-btn p-1.5 rounded-lg opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
                           title="Delete project"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
-                        <ChevronRight className="w-4 h-4 text-stone-300 dark:text-stone-600 group-hover:text-stone-400 transition-colors" />
+                        <ChevronRight className="chevron-icon w-4 h-4 text-stone-300 dark:text-stone-600 ml-0.5" />
                       </div>
                     </div>
 
@@ -414,12 +429,12 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
                         return (
                           <div
                             key={p}
-                            className="h-1 flex-1 rounded-full transition-colors"
+                            className={`progress-segment h-1 flex-1 rounded-full ${isActive ? 'active' : ''}`}
                             style={{
                               backgroundColor: isActive
                                 ? getPhaseAccent(project.phase)
                                 : 'var(--stone-200)',
-                              opacity: isActive ? (p === project.phase ? 1 : 0.35) : 0.3,
+                              opacity: isActive ? 1 : 0.3,
                             }}
                           />
                         );
@@ -455,7 +470,7 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
                 placeholder="e.g., TaskMaster AI"
-                className="w-full px-4 py-2.5 border border-stone-300 dark:border-stone-600 rounded-lg focus:ring-2 focus:ring-terra-500 focus:border-transparent outline-none text-sm mb-5 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 placeholder:text-stone-400"
+                className="w-full px-4 py-2.5 border border-stone-300 dark:border-stone-600 rounded-lg focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500 focus:border-transparent outline-none text-sm mb-5 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 placeholder:text-stone-400"
                 autoFocus
               />
 
@@ -466,14 +481,14 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
                     setShowModal(false);
                     setProjectName('');
                   }}
-                  className="flex-1 px-4 py-2.5 border border-stone-200 dark:border-stone-600 rounded-lg text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700 transition"
+                  className="btn-secondary flex-1 px-4 py-2.5 border border-stone-200 dark:border-stone-600 rounded-lg text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!projectName.trim()}
-                  className="flex-1 px-4 py-2.5 bg-terra-500 text-white rounded-lg text-sm font-semibold hover:bg-terra-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-primary flex-1 px-4 py-2.5 bg-terra-500 text-white rounded-lg text-sm font-semibold hover:bg-terra-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 >
                   Create
                 </button>

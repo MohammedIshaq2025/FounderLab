@@ -1,5 +1,9 @@
 # FounderLab - Development Guidelines
 
+## GitHub Credentials
+- **Username**: MohammedIshaq2025
+- **Email**: iansari.070201@gmail.com
+
 ## Design Philosophy
 - **Premium, elegant, minimal UI** — every screen should feel polished and production-grade
 - Clean, modern aesthetic with intentional whitespace and visual hierarchy

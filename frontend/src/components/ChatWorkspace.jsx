@@ -6,11 +6,15 @@ import CanvasView from './CanvasView';
 import DocumentsPanel from './DocumentsPanel';
 import PrdGenerationView from './PrdGenerationView';
 import DocumentPreview from './DocumentPreview';
-import { ArrowLeft, FileText, Check, Lightbulb, GitBranch, Network, FileText as FileTextIcon, Download, MessageSquare, File } from 'lucide-react';
+import { ArrowLeft, FileText, Check, Lightbulb, GitBranch, Network, FileText as FileTextIcon, Download, MessageSquare, File, User, Settings, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 function ChatWorkspace({ projects, onUpdateProject }) {
   const { projectId } = useParams();
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const [showAccountPopup, setShowAccountPopup] = useState(false);
+  const accountRef = useRef(null);
 
   const [projectName, setProjectName] = useState('');
   const [phase, setPhase] = useState(1);
@@ -57,6 +61,18 @@ function ChatWorkspace({ projects, onUpdateProject }) {
 
   useEffect(() => { canvasRef.current = canvasState; }, [canvasState]);
   useEffect(() => { projectIdRef.current = projectId; }, [projectId]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (accountRef.current && !accountRef.current.contains(e.target)) {
+        setShowAccountPopup(false);
+      }
+    };
+    if (showAccountPopup) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showAccountPopup]);
 
   // Load document content when toggling to Documents tab with a generated PRD
   useEffect(() => {
@@ -966,6 +982,11 @@ function ChatWorkspace({ projects, onUpdateProject }) {
     }
   };
 
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/auth', { replace: true });
+  };
+
   const getPhaseName = (p) => {
     const names = {
       1: 'Ideation',
@@ -988,9 +1009,9 @@ function ChatWorkspace({ projects, onUpdateProject }) {
   const PHASE_COLORS = {
     1: '#E8613C',
     2: '#D97706',
-    3: '#0D9488',
+    3: '#7C3AED',
     4: '#BE123C',
-    5: '#059669',
+    5: '#0D9488',
   };
 
   // Determine which messages to show
@@ -1041,6 +1062,42 @@ function ChatWorkspace({ projects, onUpdateProject }) {
             {projectName}
           </span>
         </div>
+
+        {/* User Account Icon */}
+        <div className="ml-auto z-10 relative" ref={accountRef}>
+          <button
+            onClick={() => setShowAccountPopup((prev) => !prev)}
+            className="w-8 h-8 rounded-full bg-stone-200 dark:bg-stone-700 flex items-center justify-center hover:bg-stone-300 dark:hover:bg-stone-600 transition-colors"
+          >
+            <User className="w-4 h-4 text-stone-500 dark:text-stone-400" />
+          </button>
+
+          {showAccountPopup && (
+            <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 shadow-lg dark:shadow-2xl dark:shadow-black/30 overflow-hidden animate-scale-in origin-top-right">
+              <button
+                onClick={() => {
+                  setShowAccountPopup(false);
+                  navigate('/settings');
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors"
+              >
+                <Settings className="w-4 h-4 text-stone-500 dark:text-stone-400" />
+                <span className="text-[13px] font-medium text-stone-700 dark:text-stone-300">Settings</span>
+              </button>
+              <div className="border-t border-stone-100 dark:border-stone-700" />
+              <button
+                onClick={() => {
+                  setShowAccountPopup(false);
+                  handleLogout();
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+              >
+                <LogOut className="w-4 h-4 text-red-400" />
+                <span className="text-[13px] font-medium text-red-500">Log Out</span>
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* Main Area */}
@@ -1067,7 +1124,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                         className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${isViewing ? 'ring-2 ring-offset-1 ring-stone-400' : ''}`}
                         style={{
                           backgroundColor: isCompleted
-                            ? '#059669'
+                            ? '#10B981'
                             : isCurrent
                             ? PHASE_COLORS[p.number]
                             : 'var(--stone-200)',
@@ -1103,7 +1160,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                       <div
                         className="flex-1 h-px mx-2"
                         style={{
-                          backgroundColor: phase > p.number ? '#059669' : 'var(--stone-200)',
+                          backgroundColor: phase > p.number ? '#10B981' : 'var(--stone-200)',
                         }}
                       />
                     )}

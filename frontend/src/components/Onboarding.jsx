@@ -45,22 +45,11 @@ const TOTAL_STEPS = 4;
 
 /* ─── Logo Component ────────────────────────────────────────────── */
 
-function FounderLabLogo({ size = 'default' }) {
-  const isLarge = size === 'large';
+function FounderLabLogo() {
   return (
-    <div className="flex items-center gap-2.5">
-      <div
-        className={`${
-          isLarge ? 'w-12 h-12 rounded-[14px]' : 'w-8 h-8 rounded-[10px]'
-        } bg-stone-800 dark:bg-stone-700 flex items-center justify-center`}
-      >
-        <span className={`text-white font-bold ${isLarge ? 'text-lg' : 'text-sm'}`}>F</span>
-      </div>
-      {!isLarge && (
-        <span className="text-[15px] font-semibold text-stone-800 dark:text-stone-200 tracking-tight">
-          Founder Lab
-        </span>
-      )}
+    <div className="flex items-center">
+      <img src="/logo-black.svg" alt="FounderLab" className="h-12 dark:hidden" />
+      <img src="/logo-white.svg" alt="FounderLab" className="h-12 hidden dark:block" />
     </div>
   );
 }
@@ -106,9 +95,8 @@ function WelcomeStep({ onNext }) {
         }`}
       >
         {/* Logo */}
-        <div className="w-16 h-16 bg-stone-800 dark:bg-stone-700 rounded-[18px] flex items-center justify-center mb-8 shadow-lg shadow-stone-900/10 dark:shadow-black/30">
-          <span className="text-white font-bold text-2xl">F</span>
-        </div>
+        <img src="/logo-black.svg" alt="FounderLab" className="h-12 mb-8 dark:hidden" />
+        <img src="/logo-white.svg" alt="FounderLab" className="h-12 mb-8 hidden dark:block" />
 
         {/* Heading */}
         <h1 className="text-[36px] font-bold tracking-tight text-stone-950 dark:text-stone-50 mb-3 leading-[1.1]">

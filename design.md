@@ -14,6 +14,16 @@ This document records the founder's confirmed design preferences. Reference befo
 
 ---
 
+## Logo & Favicon
+
+- **Logo files**: `frontend/public/logo-black.svg` (light mode), `frontend/public/logo-white.svg` (dark mode), `frontend/public/favicon.svg` (browser tab icon)
+- **Logo rendering**: Always use dark/light `<img>` pair with `dark:hidden` / `hidden dark:block` to swap based on theme
+- **Logo height**: `h-12` (48px) across all pages (Auth, Onboarding steps, Dashboard header)
+- **Favicon**: SVG favicon linked in `index.html` via `<link rel="icon" type="image/svg+xml" href="/favicon.svg" />`
+- **Welcome logo**: Onboarding welcome step uses the same dark/light `<img>` pair at `h-12`
+
+---
+
 ## Confirmed Preferences
 
 ### Auth Page
@@ -21,7 +31,7 @@ This document records the founder's confirmed design preferences. Reference befo
 - Split-screen layout: left panel (~45%, form) + right panel (~55%, decorative visual)
 - Right panel: abstract gradient mesh with warm terra + stone tones, floating testimonial card with subtle animation. Hidden on mobile.
 - Left panel: vertically centered form with generous whitespace
-- FounderLab logo top-left (same "F" rounded square + "Founder Lab" text from Onboarding)
+- FounderLab logo top-left: `<img>` dark/light pair (`/logo-black.svg` + `/logo-white.svg`) at `h-12`, switching via `dark:hidden` / `hidden dark:block`
 - Two modes toggled inline: **Sign In** (email + password + "Keep me signed in" + sign-in button) and **Sign Up** (name + email + password + "Create Account" button)
 - Password field has eye icon toggle (Eye/EyeOff from lucide-react)
 - Toggle text at bottom: "New to Founder Lab? Create Account" / "Already have an account? Sign In"
@@ -40,7 +50,7 @@ This document records the founder's confirmed design preferences. Reference befo
 - User account at bottom: avatar + name + email — clickable to open popup
 - Account popup: popover from bottom with "Settings" and "Log Out" menu items
 - Collapse toggle uses PanelLeftClose/PanelLeftOpen icons
-- FounderLab logo in header is clickable — navigates to dashboard
+- FounderLab logo in header: `<img>` dark/light pair (`/logo-black.svg` + `/logo-white.svg`) at `h-12` — clickable, navigates to dashboard
 
 ### Project Cards (Main Content)
 
@@ -72,6 +82,13 @@ This document records the founder's confirmed design preferences. Reference befo
 - Connected by horizontal flex lines
 - Completed = green checkmark, current = phase accent color with ring glow
 - Labels always visible
+
+### ChatWorkspace Header
+
+- Back arrow (left), Chat/Documents tab toggle, centered project name, user account icon (right)
+- User account icon: `w-8 h-8` rounded-full circle with `User` lucide icon, `bg-stone-200 dark:bg-stone-700`
+- Click opens dropdown popup (top-right origin): Settings + Log Out, same pattern as Dashboard sidebar popup
+- Click-outside dismisses popup
 
 ### Canvas
 
@@ -121,6 +138,7 @@ This document records the founder's confirmed design preferences. Reference befo
 
 - Full-screen centered on `stone-50 dark:stone-950` background
 - 4-step flow: Welcome → User Role → Technical Level → Referral Source
+- Welcome step + step headers: `FounderLabLogo` dark/light `<img>` pair at `h-12`
 - Horizontal slide animations between steps
 - 4-dot progress indicator (`bg-terra-500` active, `bg-stone-300 dark:bg-stone-600` inactive)
 - Selection cards: `border-terra-500 bg-terra-50 dark:bg-terra-500/10 ring-2 ring-terra-500/20` when selected

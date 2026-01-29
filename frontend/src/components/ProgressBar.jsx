@@ -12,9 +12,9 @@ const PHASES = [
 const PHASE_COLORS = {
   1: '#E8613C',
   2: '#D97706',
-  3: '#0D9488',
+  3: '#7C3AED',
   4: '#BE123C',
-  5: '#059669',
+  5: '#0D9488',
 };
 
 function ProgressBar({ phase, projectName, compact = false }) {
@@ -32,12 +32,12 @@ function ProgressBar({ phase, projectName, compact = false }) {
                 className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium"
                 style={{
                   backgroundColor: isCompleted
-                    ? '#D1FAE5'
+                    ? '#ECFDF5'
                     : isCurrent
                     ? '#FDECE7'
                     : '#F5F5F4',
                   color: isCompleted
-                    ? '#059669'
+                    ? '#10B981'
                     : isCurrent
                     ? PHASE_COLORS[p.number]
                     : '#A8A29E',
@@ -54,7 +54,7 @@ function ProgressBar({ phase, projectName, compact = false }) {
                 <div
                   className="w-3 h-px"
                   style={{
-                    backgroundColor: isCompleted ? '#059669' : '#D6D3D1',
+                    backgroundColor: isCompleted ? '#10B981' : '#D6D3D1',
                   }}
                 />
               )}
@@ -82,7 +82,7 @@ function ProgressBar({ phase, projectName, compact = false }) {
               className="h-full transition-all duration-500"
               style={{
                 width: `${((phase - 1) / (PHASES.length - 1)) * 100}%`,
-                backgroundColor: '#059669',
+                backgroundColor: '#10B981',
               }}
             />
           </div>
@@ -97,12 +97,12 @@ function ProgressBar({ phase, projectName, compact = false }) {
                   className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-all"
                   style={{
                     backgroundColor: isCompleted
-                      ? '#059669'
+                      ? '#10B981'
                       : isCurrent
                       ? '#FFFFFF'
                       : '#FFFFFF',
                     borderColor: isCompleted
-                      ? '#059669'
+                      ? '#10B981'
                       : isCurrent
                       ? PHASE_COLORS[p.number]
                       : '#D6D3D1',
