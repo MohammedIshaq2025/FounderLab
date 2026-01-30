@@ -31,9 +31,9 @@ function AppContent() {
     const publicRoutes = ['/auth', '/landing', '/pricing', '/privacy', '/terms'];
 
     if (!user) {
-      // Not logged in - redirect to auth unless on public route
+      // Not logged in - redirect to landing unless on public route
       if (!publicRoutes.includes(location.pathname)) {
-        navigate('/auth', { replace: true });
+        navigate('/landing', { replace: true });
       }
       return;
     }
@@ -148,7 +148,7 @@ function AppContent() {
               onRefresh={loadProjects}
             />
           ) : (
-            <Navigate to="/auth" replace />
+            <Navigate to="/landing" replace />
           )
         }
       />
