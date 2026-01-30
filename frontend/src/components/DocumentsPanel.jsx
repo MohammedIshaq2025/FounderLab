@@ -34,7 +34,7 @@ function DocumentsPanel({ projectId, refreshTrigger }) {
     const labels = {
       features: 'Features',
       tech_stack: 'Tech Stack',
-      prd: 'PRD',
+      prd: 'Product Requirements Document',
     };
     return labels[type] || type;
   };
@@ -82,8 +82,8 @@ function DocumentsPanel({ projectId, refreshTrigger }) {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-24">
-            <div className="w-14 h-14 bg-stone-100 dark:bg-stone-800 rounded-2xl flex items-center justify-center mb-4">
-              <File className="w-7 h-7 text-stone-400" />
+            <div className="w-14 h-14 bg-[#8D323A]/10 dark:bg-[#8D323A]/20 rounded-2xl flex items-center justify-center mb-4">
+              <File className="w-7 h-7 text-[#8D323A]" />
             </div>
             <p className="text-sm font-semibold text-stone-700 dark:text-stone-300">No documents yet</p>
             <p className="text-[13px] text-stone-500 dark:text-stone-400 mt-1.5 text-center max-w-[260px]">

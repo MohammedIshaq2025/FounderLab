@@ -41,6 +41,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
   const [mindmapData, setMindmapData] = useState(null);
   const [isStepLoading, setIsStepLoading] = useState(false);
   const [isWebSearching, setIsWebSearching] = useState(false);
+  const [isGeneratingFeatures, setIsGeneratingFeatures] = useState(false);
 
   // Phase 3 MindMapping complete state (user must click Continue)
   const [mindmapComplete, setMindmapComplete] = useState(false);
@@ -288,6 +289,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
         });
         if (!hasInteractiveMsg) {
           // Auto-trigger Step 1
+          setIsGeneratingFeatures(true);
           try {
             const initResponse = await api.post('/api/chat', {
               project_id: projectId,
@@ -307,6 +309,8 @@ function ChatWorkspace({ projects, onUpdateProject }) {
             }
           } catch (err) {
             console.error('Error auto-initializing Phase 3:', err);
+          } finally {
+            setIsGeneratingFeatures(false);
           }
         } else {
           // Restore metadata on messages from DB
@@ -841,6 +845,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
 
         // Auto-trigger Phase 3 Step 1 (complementary features)
         if (newPhase === 3) {
+          setIsGeneratingFeatures(true);
           try {
             const initResponse = await api.post('/api/chat', {
               project_id: projectId,
@@ -861,6 +866,8 @@ function ChatWorkspace({ projects, onUpdateProject }) {
             }
           } catch (err) {
             console.error('Error initializing Phase 3:', err);
+          } finally {
+            setIsGeneratingFeatures(false);
           }
         }
       }
@@ -974,6 +981,9 @@ function ChatWorkspace({ projects, onUpdateProject }) {
         setIsPrdGenerating(false);
         setViewingPhase(null);
         onUpdateProject(projectId, { phase: newPhase });
+
+        // Switch to Chat tab to show Phase 5 (Export) welcome message
+        setActiveTab('chat');
       }
     } catch (error) {
       console.error('Error advancing to export:', error);
@@ -985,6 +995,28 @@ function ChatWorkspace({ projects, onUpdateProject }) {
   const handleLogout = async () => {
     await signOut();
     navigate('/landing', { replace: true });
+  };
+
+  // Handle AI-initiated downloads (Phase 5)
+  const handleDownloadAction = async (type) => {
+    // First ensure we have document data
+    let docData = documentData;
+    if (!docData) {
+      try {
+        const res = await api.get(`/api/documents/${projectId}/content`);
+        docData = res.data.document;
+        setDocumentData(docData);
+        setDocumentContent(res.data.content);
+      } catch (e) {
+        console.error('Error fetching document for download:', e);
+        return;
+      }
+    }
+
+    const filePath = type === 'pdf' ? docData?.pdf_path : docData?.md_path;
+    if (filePath) {
+      window.open(`${API_URL}/api/documents/download/${encodeURIComponent(filePath)}`, '_blank');
+    }
   };
 
   const getPhaseName = (p) => {
@@ -1052,7 +1084,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                 : 'text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300'
             }`}
           >
-            <File className="w-3 h-3" />
+            <File className={`w-3 h-3 ${activeTab === 'documents' ? 'text-[#8D323A]' : ''}`} />
             Documents
           </button>
         </div>
@@ -1203,6 +1235,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                   onSendStepData={sendStepData}
                   isStepLoading={isStepLoading}
                   isWebSearching={isWebSearching}
+                  isGeneratingFeatures={isGeneratingFeatures}
                   phase={phase}
                   isReadOnly={isViewingPast}
                   isPrdGenerating={isPrdGenerating}
@@ -1222,6 +1255,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                     : phase === 2 ? 'Continue to MindMapping'
                     : 'Continue to PRD Generation'
                   }
+                  onDownloadAction={phase === 5 ? handleDownloadAction : undefined}
                 />
               )
             ) : (
@@ -1237,7 +1271,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
               content={documentContent}
               document={documentData}
               loading={documentLoading}
-              onExport={() => setActiveTab('chat')}
+              onExport={phase === 4 ? handleContinueToExport : undefined}
             />
           </div>
         ) : (

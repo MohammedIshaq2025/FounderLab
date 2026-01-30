@@ -22,8 +22,8 @@ const STEPS = [
   { label: 'Assembling final document', icon: Sparkles },
 ];
 
-// +1s per gap from previous delays → ~18s total cascade
-const STEP_DELAYS = [0, 3200, 6200, 9000, 12000, 15200, 18400];
+// Doubled gaps → ~36s total cascade for theatrical effect
+const STEP_DELAYS = [0, 6400, 12400, 18000, 24000, 30400, 36800];
 
 function PrdGenerationView({ isGenerating, isGenerated, onFinished, onContinueToExport, isContinueLoading }) {
   const [activeStep, setActiveStep] = useState(-1);
@@ -162,8 +162,8 @@ function PrdGenerationView({ isGenerating, isGenerated, onFinished, onContinueTo
                   {/* Circle indicator */}
                   <div className="flex-shrink-0">
                     {state === 'completed' ? (
-                      <div className="w-[28px] h-[28px] rounded-full bg-emerald-50 dark:bg-emerald-500/10 border-[1.5px] border-emerald-400 dark:border-emerald-500/60 flex items-center justify-center animate-scale-in">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" strokeWidth={2.5} />
+                      <div className="w-[28px] h-[28px] rounded-full bg-emerald-100 dark:bg-emerald-600/15 border-[1.5px] border-emerald-600 dark:border-emerald-500 flex items-center justify-center animate-scale-in">
+                        <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" strokeWidth={2.5} />
                       </div>
                     ) : state === 'active' ? (
                       <div className="w-[28px] h-[28px] rounded-full bg-white dark:bg-stone-800 border-[1.5px] border-stone-300 dark:border-stone-600 flex items-center justify-center shadow-sm">
@@ -181,7 +181,7 @@ function PrdGenerationView({ isGenerating, isGenerated, onFinished, onContinueTo
                     <div
                       className={`w-px flex-1 min-h-[16px] transition-colors duration-700 ${
                         state === 'completed'
-                          ? 'bg-emerald-300 dark:bg-emerald-700/60'
+                          ? 'bg-emerald-500 dark:bg-emerald-600/60'
                           : 'bg-stone-200 dark:bg-stone-700/40'
                       }`}
                     />
@@ -194,7 +194,7 @@ function PrdGenerationView({ isGenerating, isGenerated, onFinished, onContinueTo
                     <StepIcon
                       className={`w-[15px] h-[15px] flex-shrink-0 transition-colors duration-300 ${
                         state === 'completed'
-                          ? 'text-emerald-400 dark:text-emerald-500/70'
+                          ? 'text-emerald-600 dark:text-emerald-500'
                           : state === 'active'
                           ? 'text-stone-500 dark:text-stone-400'
                           : 'text-stone-300 dark:text-stone-600'
@@ -227,8 +227,8 @@ function PrdGenerationView({ isGenerating, isGenerated, onFinished, onContinueTo
           }`}
         >
           <div className="flex items-center justify-center gap-1.5 mb-1">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-            <span className="text-[14px] font-semibold text-emerald-600 dark:text-emerald-400">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="text-[14px] font-semibold text-emerald-700 dark:text-emerald-400">
               Your PRD is ready
             </span>
           </div>

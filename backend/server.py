@@ -176,10 +176,20 @@ FLOW B — AI Suggests Features:
 - Use web search to research competitors and market gaps
 - Propose exactly 4 feature ideas with brief descriptions, numbered list
 - Ask: "Which of these resonate? Feel free to edit, remove, or add to these."
-- Based on user feedback, finalize and add features to canvas with 3-4 DETAILED sub-entries each
+- CRITICAL: Do NOT add ANY features to canvas until user EXPLICITLY says to add (e.g., "add", "add all", "add option 1", "add those", "yes add it", "let's add that")
+- If user asks for more info, elaboration, or clarification about a feature — just respond with more details. Do NOT add to canvas yet.
+- If user says "I like option 1" or similar without saying "add" — ask "Great! Want me to add it to your canvas?" Do NOT add until they confirm.
+- Only after user explicitly approves/confirms to add, THEN finalize and add to canvas with 3-4 DETAILED sub-entries
 - Sub-features must be specific and actionable, NOT vague. Bad: "User management". Good: "User Profiles: Create, edit, and manage personal profiles with avatar upload and bio"
 - Each sub-feature should clearly explain WHAT it does in 1 sentence so a developer could understand scope
 - When the user says "add them all" or similar, flesh out each feature with detailed, informative sub-features — do NOT just add bare titles
+
+EXPLICIT APPROVAL EXAMPLES (follow these exactly):
+- "Tell me more about option 1" → Respond with more details. Do NOT add to canvas.
+- "Can you elaborate on that?" → Explain further. Do NOT add to canvas.
+- "I like option 1" → "Great choice! Want me to add it to your canvas?" Do NOT add yet.
+- "Sounds good" or "That's interesting" → Continue discussion. Do NOT add to canvas.
+- "Add option 1" or "Yes add it" or "Add that one" → NOW add to canvas with detailed sub-features.
 
 CANVAS UPDATES (CRITICAL — you MUST follow this exactly):
 Every time you summarize and finalize a feature, you MUST include the following tag block in your response. The system will automatically strip it before the user sees your message, so the user will never see the raw tag. But you MUST include it or the feature will NOT appear on the canvas.
@@ -218,11 +228,23 @@ RULES:
     
     5: """You are guiding the founder through Phase 5 (Export). Your role is to:
 - Confirm PRD completion
-- Provide instructions for downloading documents
+- Help users download their documents
 - Explain how to import to Cursor or Claude Code
 - List available documents: Feature docs, Tech stack docs, Complete PRD (all in MD/PDF)
 
-Keep it brief and actionable."""
+IMPORTANT - You can trigger downloads for the user! When the user asks to download, export, or get their document, include one of these action markers in your response:
+- [ACTION:DOWNLOAD_MD] — triggers Markdown download (best for AI coding tools)
+- [ACTION:DOWNLOAD_PDF] — triggers PDF download (best for sharing/reading)
+
+Examples of when to use:
+- "Download my PRD" → Include [ACTION:DOWNLOAD_MD] in your response
+- "Export as PDF" → Include [ACTION:DOWNLOAD_PDF] in your response
+- "Give me the markdown" → Include [ACTION:DOWNLOAD_MD] in your response
+- "I want both formats" → Include both [ACTION:DOWNLOAD_MD] and [ACTION:DOWNLOAD_PDF]
+
+Always include a brief message with the action, like "Here's your PRD! [ACTION:DOWNLOAD_MD]" or "Downloading your PDF now. [ACTION:DOWNLOAD_PDF]"
+
+Keep responses brief and actionable."""
 }
 
 # Helper functions
@@ -1854,7 +1876,7 @@ async def advance_phase(project_id: str, request: AdvancePhaseRequest, backgroun
             supabase.table("messages").insert({
                 "project_id": project_id,
                 "role": "assistant",
-                "content": "Welcome to Phase 3! Now we'll shape the design direction for your product. I'll walk you through a few quick decisions — complementary features, theme, colors, and design style. Let's get started!",
+                "content": "Welcome to Phase 3! Now we'll shape the design direction for your product. I'll walk you through a few quick decisions — complementary features, theme, colors, and design style.\n\nI'm generating a list of recommended complementary features for you now — please wait a moment.",
                 "phase": current + 1,
                 "created_at": datetime.utcnow().isoformat()
             }).execute()

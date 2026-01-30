@@ -4,7 +4,7 @@ import { Download, FileText, Loader2, ArrowRight } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || '';
 
-function DocumentPreview({ content, document, loading, onExport }) {
+function DocumentPreview({ content, document, loading, onExport, showExportPulse = true }) {
   const downloadDocument = (filePath) => {
     window.open(`${API_URL}/api/documents/download/${encodeURIComponent(filePath)}`, '_blank');
   };
@@ -35,10 +35,20 @@ function DocumentPreview({ content, document, loading, onExport }) {
           {onExport && (
             <button
               onClick={onExport}
-              className="px-3 py-1.5 text-xs bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg hover:border-terra-500 hover:text-terra-500 transition flex items-center gap-1.5 font-medium text-stone-600 dark:text-stone-300"
+              className={`
+                relative px-4 py-1.5 text-xs rounded-lg flex items-center gap-1.5 font-semibold
+                bg-[#8D323A] text-white
+                hover:bg-[#722830] hover:shadow-lg hover:shadow-[#8D323A]/20
+                transition-all duration-300 ease-out
+                active:scale-[0.97]
+                ${showExportPulse ? 'export-pulse' : ''}
+              `}
             >
               Export
               <ArrowRight className="w-3 h-3" />
+              {showExportPulse && (
+                <span className="absolute inset-0 rounded-lg animate-ping-slow bg-[#8D323A]/30 pointer-events-none" />
+              )}
             </button>
           )}
           {document?.pdf_path && (

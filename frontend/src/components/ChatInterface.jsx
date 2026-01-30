@@ -86,26 +86,26 @@ function MultiSelectCard({ metadata, onSubmit, isActive }) {
                 key={option.id}
                 onClick={() => toggleOption(option.id)}
                 disabled={submitted}
-                className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-150 ${
+                className={`w-full text-left px-4 py-3.5 rounded-xl transition-all duration-150 border-2 ${
                   isSelected
-                    ? 'bg-stone-800 dark:bg-stone-700'
-                    : 'hover:bg-stone-50 dark:hover:bg-stone-800/50'
+                    ? 'border-stone-800 dark:border-stone-300 bg-stone-50 dark:bg-stone-800/20'
+                    : 'border-transparent hover:bg-stone-50 dark:hover:bg-stone-800/50'
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <div className={`w-[18px] h-[18px] mt-[2px] rounded-[5px] border-[1.5px] flex-shrink-0 flex items-center justify-center transition-colors ${
                     isSelected
-                      ? 'bg-white border-white'
+                      ? 'bg-stone-800 dark:bg-stone-300 border-stone-800 dark:border-stone-300'
                       : 'border-stone-300 dark:border-stone-600'
                   }`}>
-                    {isSelected && <Check className="w-2.5 h-2.5 text-stone-800" strokeWidth={3} />}
+                    {isSelected && <Check className="w-2.5 h-2.5 text-white dark:text-stone-800" strokeWidth={3} />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className={`text-[13px] font-medium leading-tight ${isSelected ? 'text-white' : 'text-stone-700 dark:text-stone-300'}`}>
+                    <span className={`text-[13px] font-medium leading-tight ${isSelected ? 'text-stone-800 dark:text-stone-100' : 'text-stone-700 dark:text-stone-300'}`}>
                       {option.label}
                     </span>
                     {option.description && (
-                      <p className={`text-[11px] mt-0.5 leading-relaxed ${isSelected ? 'text-stone-400' : 'text-stone-400 dark:text-stone-500'}`}>
+                      <p className={`text-[11px] mt-0.5 leading-relaxed ${isSelected ? 'text-stone-500 dark:text-stone-400' : 'text-stone-400 dark:text-stone-500'}`}>
                         {option.description}
                       </p>
                     )}
@@ -216,21 +216,21 @@ function SingleSelectCard({ metadata, onSubmit, isActive }) {
                   key={option.id}
                   onClick={() => handleSelect(option.id)}
                   disabled={submitted}
-                  className={`flex-1 text-center px-4 py-4 rounded-xl transition-all duration-150 ${
+                  className={`flex-1 text-center px-4 py-4 rounded-xl transition-all duration-150 border-2 ${
                     isSelected
-                      ? 'bg-stone-800 dark:bg-stone-700'
-                      : 'hover:bg-stone-50 dark:hover:bg-stone-800/50'
+                      ? 'border-stone-800 dark:border-stone-300 bg-stone-50 dark:bg-stone-800/20'
+                      : 'border-transparent hover:bg-stone-50 dark:hover:bg-stone-800/50'
                   }`}
                 >
                   <div className="flex flex-col items-center gap-2">
                     {isLight
-                      ? <Sun className={`w-5 h-5 ${isSelected ? 'text-amber-300' : 'text-amber-500'}`} />
-                      : <Moon className={`w-5 h-5 ${isSelected ? 'text-indigo-300' : 'text-indigo-400'}`} />}
-                    <span className={`text-[13px] font-medium ${isSelected ? 'text-white' : 'text-stone-700 dark:text-stone-300'}`}>
+                      ? <Sun className={`w-5 h-5 ${isSelected ? 'text-amber-500' : 'text-amber-500'}`} />
+                      : <Moon className={`w-5 h-5 ${isSelected ? 'text-indigo-400' : 'text-indigo-400'}`} />}
+                    <span className={`text-[13px] font-medium ${isSelected ? 'text-stone-800 dark:text-stone-100' : 'text-stone-700 dark:text-stone-300'}`}>
                       {option.label}
                     </span>
                     {option.description && (
-                      <p className={`text-[10px] leading-snug ${isSelected ? 'text-stone-400' : 'text-stone-400 dark:text-stone-500'}`}>
+                      <p className={`text-[10px] leading-snug ${isSelected ? 'text-stone-500 dark:text-stone-400' : 'text-stone-400 dark:text-stone-500'}`}>
                         {option.description}
                       </p>
                     )}
@@ -244,26 +244,26 @@ function SingleSelectCard({ metadata, onSubmit, isActive }) {
                 key={option.id}
                 onClick={() => handleSelect(option.id)}
                 disabled={submitted}
-                className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-150 ${
+                className={`w-full text-left px-4 py-3.5 rounded-xl transition-all duration-150 border-2 ${
                   isSelected
-                    ? 'bg-stone-800 dark:bg-stone-700'
-                    : 'hover:bg-stone-50 dark:hover:bg-stone-800/50'
+                    ? 'border-stone-800 dark:border-stone-300 bg-stone-50 dark:bg-stone-800/20'
+                    : 'border-transparent hover:bg-stone-50 dark:hover:bg-stone-800/50'
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <div className={`w-[18px] h-[18px] mt-[2px] rounded-full border-[1.5px] flex-shrink-0 flex items-center justify-center transition-colors ${
                     isSelected
-                      ? 'border-white'
+                      ? 'border-stone-800 dark:border-stone-300'
                       : 'border-stone-300 dark:border-stone-600'
                   }`}>
-                    {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                    {isSelected && <div className="w-2 h-2 rounded-full bg-stone-800 dark:bg-stone-300" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className={`text-[13px] font-medium ${isSelected ? 'text-white' : 'text-stone-700 dark:text-stone-300'}`}>
+                    <span className={`text-[13px] font-medium ${isSelected ? 'text-stone-800 dark:text-stone-100' : 'text-stone-700 dark:text-stone-300'}`}>
                       {option.label}
                     </span>
                     {option.description && (
-                      <p className={`text-[11px] mt-0.5 leading-relaxed ${isSelected ? 'text-stone-400' : 'text-stone-400 dark:text-stone-500'}`}>
+                      <p className={`text-[11px] mt-0.5 leading-relaxed ${isSelected ? 'text-stone-500 dark:text-stone-400' : 'text-stone-400 dark:text-stone-500'}`}>
                         {option.description}
                       </p>
                     )}
@@ -280,15 +280,15 @@ function SingleSelectCard({ metadata, onSubmit, isActive }) {
             <button
               onClick={() => handleSelect('custom')}
               disabled={submitted}
-              className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-150 ${
+              className={`w-full text-left px-4 py-3.5 rounded-xl transition-all duration-150 border-2 ${
                 selected === 'custom'
-                  ? 'bg-stone-800 dark:bg-stone-700'
-                  : 'hover:bg-stone-50 dark:hover:bg-stone-800/50'
+                  ? 'border-stone-800 dark:border-stone-300 bg-stone-50 dark:bg-stone-800/20'
+                  : 'border-transparent hover:bg-stone-50 dark:hover:bg-stone-800/50'
               }`}
             >
               <div className="flex items-center gap-3">
-                <Plus className={`w-4 h-4 ${selected === 'custom' ? 'text-white' : 'text-stone-400'}`} />
-                <span className={`text-[13px] font-medium ${selected === 'custom' ? 'text-white' : 'text-stone-500 dark:text-stone-400'}`}>
+                <Plus className={`w-4 h-4 ${selected === 'custom' ? 'text-stone-800 dark:text-stone-100' : 'text-stone-400'}`} />
+                <span className={`text-[13px] font-medium ${selected === 'custom' ? 'text-stone-800 dark:text-stone-100' : 'text-stone-500 dark:text-stone-400'}`}>
                   Custom
                 </span>
               </div>
@@ -503,11 +503,12 @@ function InteractiveMessage({ message, onSubmit, isLastMessage }) {
   }
 }
 
-function ChatInterface({ messages, onSendMessage, onSendStepData, phase, isReadOnly, isPrdGenerating, showContinueButton, onContinue, isContinueLoading, continueLabel, isStepLoading, isWebSearching }) {
+function ChatInterface({ messages, onSendMessage, onSendStepData, phase, isReadOnly, isPrdGenerating, showContinueButton, onContinue, isContinueLoading, continueLabel, isStepLoading, isWebSearching, isGeneratingFeatures, onDownloadAction }) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+  const processedActionsRef = useRef(new Set());
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -516,6 +517,28 @@ function ChatInterface({ messages, onSendMessage, onSendStepData, phase, isReadO
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Detect and handle download action markers in AI messages
+  useEffect(() => {
+    if (!onDownloadAction || !messages.length) return;
+
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage.role !== 'assistant' || !lastMessage.content) return;
+
+    // Create a unique key for this message to avoid duplicate processing
+    const msgKey = `${lastMessage.id || lastMessage.created_at}-${lastMessage.content.slice(0, 50)}`;
+    if (processedActionsRef.current.has(msgKey)) return;
+
+    const content = lastMessage.content;
+    const hasMdAction = content.includes('[ACTION:DOWNLOAD_MD]');
+    const hasPdfAction = content.includes('[ACTION:DOWNLOAD_PDF]');
+
+    if (hasMdAction || hasPdfAction) {
+      processedActionsRef.current.add(msgKey);
+      if (hasMdAction) onDownloadAction('md');
+      if (hasPdfAction) onDownloadAction('pdf');
+    }
+  }, [messages, onDownloadAction]);
 
   // Auto-focus textarea after loading completes
   useEffect(() => {
@@ -627,7 +650,7 @@ function ChatInterface({ messages, onSendMessage, onSendStepData, phase, isReadO
                       li: ({ node, ...props }) => <li className="my-0.5" {...props} />,
                     }}
                   >
-                    {message.content}
+                    {message.content.replace(/\[ACTION:DOWNLOAD_(MD|PDF)\]/g, '').trim()}
                   </ReactMarkdown>
                 </div>
                 <div
@@ -679,6 +702,21 @@ function ChatInterface({ messages, onSendMessage, onSendStepData, phase, isReadO
                 <span className="text-[13px] text-stone-400">Generating your PRD...</span>
               </div>
               <p className="text-[11px] text-stone-400 mt-1.5">This usually takes about a minute</p>
+            </div>
+          </div>
+        )}
+
+        {isGeneratingFeatures && (
+          <div className="flex items-start gap-2.5">
+            <div className="flex-shrink-0 w-7 h-7 rounded-full bg-stone-800 dark:bg-stone-700 flex items-center justify-center">
+              <AIIcon className="w-3.5 h-3.5" color="white" />
+            </div>
+            <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-teal-500" />
+                <span className="text-[13px] text-stone-400">Generating complementary feature suggestions...</span>
+              </div>
+              <p className="text-[11px] text-stone-400 mt-1.5">Please wait a moment</p>
             </div>
           </div>
         )}
