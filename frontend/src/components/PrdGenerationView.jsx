@@ -25,7 +25,7 @@ const STEPS = [
 // Doubled gaps → ~36s total cascade for theatrical effect
 const STEP_DELAYS = [0, 6400, 12400, 18000, 24000, 30400, 36800];
 
-function PrdGenerationView({ isGenerating, isGenerated, onFinished, onContinueToExport, isContinueLoading }) {
+function PrdGenerationView({ isGenerating, isGenerated, onFinished, onContinueToExport, onViewDocument, isContinueLoading }) {
   const [activeStep, setActiveStep] = useState(-1);
   const [completedSteps, setCompletedSteps] = useState(new Set());
   const [showReady, setShowReady] = useState(false);
@@ -34,6 +34,10 @@ function PrdGenerationView({ isGenerating, isGenerated, onFinished, onContinueTo
   const hasFinishedRef = useRef(false);
   const onFinishedRef = useRef(onFinished);
   useEffect(() => { onFinishedRef.current = onFinished; }, [onFinished]);
+
+  // Track if PRD was already generated when component mounted (revisit case)
+  // If true, we should NOT auto-switch to documents tab
+  const wasAlreadyGeneratedOnMountRef = useRef(isGenerated && !isGenerating);
 
   const totalSteps = STEPS.length;
 
@@ -83,6 +87,12 @@ function PrdGenerationView({ isGenerating, isGenerated, onFinished, onContinueTo
   useEffect(() => {
     if (isGenerated && !isGenerating && !hasFinishedRef.current) {
       hasFinishedRef.current = true;
+
+      // If PRD was already generated when we mounted (revisit), skip the completion animation
+      // and don't auto-switch to documents tab - let user navigate manually
+      if (wasAlreadyGeneratedOnMountRef.current) {
+        return;
+      }
 
       // Complete all remaining steps
       const completeTimer = setTimeout(() => {
@@ -248,6 +258,16 @@ function PrdGenerationView({ isGenerating, isGenerated, onFinished, onContinueTo
                     <ArrowRight className="w-3.5 h-3.5" />
                   </>
                 )}
+              </button>
+            </div>
+          ) : isGenerated && !isGenerating && onViewDocument ? (
+            <div className="mt-5">
+              <button
+                onClick={onViewDocument}
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-[13px] font-semibold rounded-xl hover:bg-stone-200 dark:hover:bg-stone-700 transition-all active:scale-[0.97]"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                View Document
               </button>
             </div>
           ) : (

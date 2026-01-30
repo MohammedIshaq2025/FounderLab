@@ -1226,6 +1226,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                   isGenerated={prdGenerated}
                   onFinished={handlePrdFinished}
                   onContinueToExport={phase === 4 && !isViewingPast ? handleContinueToExport : null}
+                  onViewDocument={() => setActiveTab('documents')}
                   isContinueLoading={isContinueLoading}
                 />
               ) : (
