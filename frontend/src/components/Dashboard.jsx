@@ -150,7 +150,7 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
 
   const handleLogout = async () => {
     await signOut();
-    navigate('/auth', { replace: true });
+    navigate('/landing', { replace: true });
   };
 
   const techLevel = user?.user_metadata?.tech_level || '';
@@ -190,7 +190,7 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
 
           <button
             onClick={() => setShowModal(true)}
-            className="btn-primary flex items-center gap-2 px-4 py-2.5 bg-terra-500 text-white rounded-lg text-[13px] font-semibold hover:bg-terra-600"
+            className="btn-primary flex items-center gap-2 px-4 py-2.5 bg-[#842F36] dark:bg-[#963B43] text-white rounded-lg text-[13px] font-semibold hover:bg-[#6E272D] dark:hover:bg-[#7D323A]"
           >
             <Plus className="w-4 h-4" />
             New Project
@@ -363,7 +363,7 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-3">
-                          <h3 className="text-[15px] font-semibold text-stone-950 dark:text-stone-100 truncate group-hover:text-terra-500 transition-colors duration-200">
+                          <h3 className="text-[15px] font-semibold text-stone-950 dark:text-stone-100 truncate group-hover:text-[#842F36] dark:group-hover:text-[#963B43] transition-colors duration-200">
                             {project.name}
                           </h3>
                           <span
@@ -488,7 +488,7 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
                 <button
                   type="submit"
                   disabled={!projectName.trim()}
-                  className="btn-primary flex-1 px-4 py-2.5 bg-terra-500 text-white rounded-lg text-sm font-semibold hover:bg-terra-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                  className="btn-primary flex-1 px-4 py-2.5 bg-[#842F36] dark:bg-[#963B43] text-white rounded-lg text-sm font-semibold hover:bg-[#6E272D] dark:hover:bg-[#7D323A] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
                 >
                   Create
                 </button>

@@ -5,6 +5,10 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Onboarding from './components/Onboarding';
 import AuthPage from './components/AuthPage';
 import Settings from './components/Settings';
+import Landing from './components/landing/Landing';
+import Pricing from './components/landing/Pricing';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsConditions from './components/TermsConditions';
 import { useAuth } from './context/AuthContext';
 import api from './lib/api';
 import { applyTheme, watchSystemTheme } from './theme';
@@ -23,18 +27,33 @@ function AppContent() {
   useEffect(() => {
     if (loading) return;
 
-    if (!user && location.pathname !== '/auth') {
-      navigate('/auth', { replace: true });
+    // Allow public routes without auth
+    const publicRoutes = ['/auth', '/landing', '/pricing', '/privacy', '/terms'];
+
+    if (!user) {
+      // Not logged in - redirect to auth unless on public route
+      if (!publicRoutes.includes(location.pathname)) {
+        navigate('/auth', { replace: true });
+      }
       return;
     }
 
-    if (user) {
-      const onboarded = user.user_metadata?.onboarding_completed;
-      if (!onboarded && location.pathname === '/') {
+    // User is logged in
+    const onboarded = user.user_metadata?.onboarding_completed;
+
+    if (!onboarded) {
+      // User hasn't completed onboarding - redirect to onboarding
+      // unless they're already there or on a public route
+      if (location.pathname !== '/onboarding' && !publicRoutes.includes(location.pathname)) {
         navigate('/onboarding', { replace: true });
       }
+    } else {
+      // User is onboarded - if they're on auth page, redirect to dashboard
+      if (location.pathname === '/auth') {
+        navigate('/', { replace: true });
+      }
     }
-  }, [user, loading]);
+  }, [user, loading, location.pathname]);
 
   useEffect(() => {
     if (user) {
@@ -113,6 +132,10 @@ function AppContent() {
 
   return (
     <Routes>
+      <Route path="/landing" element={<Landing />} />
+      <Route path="/pricing" element={<Pricing />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsConditions />} />
       <Route path="/auth" element={user ? <Navigate to="/" replace /> : <AuthPage />} />
       <Route
         path="/"

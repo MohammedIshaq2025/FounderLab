@@ -984,7 +984,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
 
   const handleLogout = async () => {
     await signOut();
-    navigate('/auth', { replace: true });
+    navigate('/landing', { replace: true });
   };
 
   const getPhaseName = (p) => {

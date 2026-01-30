@@ -395,10 +395,10 @@ function AuthPage() {
         {/* Logo */}
         <div className="pt-8 pb-4">
           <Reveal index={0}>
-            <div className="flex items-center">
+            <a href="/landing" className="flex items-center hover:opacity-80 transition-opacity">
               <img src="/logo-black.svg" alt="FounderLab" className="h-12 dark:hidden" />
               <img src="/logo-white.svg" alt="FounderLab" className="h-12 hidden dark:block" />
-            </div>
+            </a>
           </Reveal>
         </div>
 

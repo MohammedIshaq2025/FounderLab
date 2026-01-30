@@ -100,7 +100,7 @@ function Settings() {
 
       // Sign out the client session
       await signOut();
-      navigate('/auth', { replace: true });
+      navigate('/landing', { replace: true });
     } catch (err) {
       const message = err.response?.data?.detail || err.message || 'Failed to delete account. Please try again.';
       setDeleteError(message);
