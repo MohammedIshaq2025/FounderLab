@@ -1616,7 +1616,7 @@ Return as JSON: {{"guidelines": ["Guideline 1", "Guideline 2", "Guideline 3"]}}"
 
         # Security node — positioned to the RIGHT of System Map (same Y, ideation X)
         sec_x = root_x + 318  # Same X as ideation
-        sec_y = root_y - 600  # 80px above system map
+        sec_y = root_y - 624  # 104px above system map
 
         canvas_updates.append({
             "action": "add_node",

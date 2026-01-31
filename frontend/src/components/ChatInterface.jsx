@@ -701,7 +701,7 @@ function ChatInterface({ messages, onSendMessage, onSendStepData, phase, isReadO
                   <>
                     <AIThinkingIcon className="w-4 h-4 text-[#8D323A]" />
                     <span className="text-[13px] text-stone-400">
-                      {phase === 1 ? 'Ideating...' : 'Thinking...'}
+                      {phase === 1 ? 'Ideating...' : phase === 2 ? 'Mapping features...' : 'Thinking...'}
                     </span>
                   </>
                 )}

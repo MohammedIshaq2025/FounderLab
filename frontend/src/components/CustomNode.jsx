@@ -513,7 +513,11 @@ const EditableTechItem = ({ value, onSave, nodeId, field }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <span className="text-stone-300 select-none">&bull;</span>
+      {/* Refined diamond bullet — architectural/technical feel */}
+      <span
+        className="w-1.5 h-1.5 flex-shrink-0 rotate-45 bg-indigo-400/60 border border-indigo-300/40"
+        style={{ borderRadius: '1px' }}
+      />
 
       {isEditing ? (
         <input
@@ -891,16 +895,21 @@ function CompetitorsNode({ data }) {
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
 
-      <div className="px-3 py-2.5 space-y-2.5">
+      <div className="px-3 pt-3.5 pb-3.5 space-y-1.5">
         {competitors.length === 0 ? (
-          <p className="text-[11px] text-stone-400 italic">No competitors identified</p>
+          <div className="bg-stone-50/80 rounded-lg px-3 py-2 border border-stone-100">
+            <p className="text-[11px] text-stone-400 italic">No competitors identified</p>
+          </div>
         ) : (
           competitors.map((comp, idx) => {
             const url = normalizeUrl(comp.url);
             return (
-              <div key={idx} className="group">
+              <div
+                key={idx}
+                className="relative bg-stone-50/80 rounded-lg px-3 py-2 border border-stone-100"
+              >
                 <div className="flex items-center gap-2">
-                  <span className="text-[12px] font-semibold text-stone-700">
+                  <span className="text-[11.5px] font-semibold text-stone-700 leading-snug">
                     {comp.name}
                   </span>
                   {url && (
@@ -916,7 +925,7 @@ function CompetitorsNode({ data }) {
                   )}
                 </div>
                 {comp.description && (
-                  <p className="text-[11px] text-stone-500 leading-relaxed mt-0.5">
+                  <p className="text-[11.5px] text-stone-500 leading-relaxed mt-0.5 whitespace-pre-wrap">
                     {comp.description}
                   </p>
                 )}
@@ -1440,39 +1449,40 @@ function SecurityNode({ data }) {
       <Handle
         type="target"
         position={Position.Left}
+        id="left"
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
 
-      <div className="px-3 py-3 space-y-2">
+      <div className="px-3 pt-3.5 pb-3.5 space-y-1.5">
         {/* Frontend Section */}
-        <div className="bg-stone-50 rounded-md p-2 border border-stone-200">
-          <p className="text-[10px] uppercase font-semibold text-stone-600 mb-1">Frontend</p>
+        <div className="bg-stone-50/80 rounded-lg px-3 py-2 border border-stone-100">
+          <p className="text-[11.5px] font-semibold text-stone-700 leading-snug mb-1">Frontend</p>
           {frontendItems.map((item, idx) => (
             <div key={idx} className="flex items-center gap-1.5 mb-0.5">
               <span className={`w-1.5 h-1.5 rounded-full ${item.priority === 'critical' ? 'bg-red-500' : 'bg-amber-500'}`} />
-              <span className="text-[11px] text-stone-700">{item.text}</span>
+              <span className="text-[11.5px] text-stone-500 leading-relaxed">{item.text}</span>
             </div>
           ))}
         </div>
 
         {/* Backend Section */}
-        <div className="bg-stone-50 rounded-md p-2 border border-stone-200">
-          <p className="text-[10px] uppercase font-semibold text-stone-600 mb-1">Backend</p>
+        <div className="bg-stone-50/80 rounded-lg px-3 py-2 border border-stone-100">
+          <p className="text-[11.5px] font-semibold text-stone-700 leading-snug mb-1">Backend</p>
           {backendItems.map((item, idx) => (
             <div key={idx} className="flex items-center gap-1.5 mb-0.5">
               <span className={`w-1.5 h-1.5 rounded-full ${item.priority === 'critical' ? 'bg-red-500' : 'bg-amber-500'}`} />
-              <span className="text-[11px] text-stone-700">{item.text}</span>
+              <span className="text-[11.5px] text-stone-500 leading-relaxed">{item.text}</span>
             </div>
           ))}
         </div>
 
         {/* Database Section */}
-        <div className="bg-stone-50 rounded-md p-2 border border-stone-200">
-          <p className="text-[10px] uppercase font-semibold text-stone-600 mb-1">Database</p>
+        <div className="bg-stone-50/80 rounded-lg px-3 py-2 border border-stone-100">
+          <p className="text-[11.5px] font-semibold text-stone-700 leading-snug mb-1">Database</p>
           {databaseItems.map((item, idx) => (
             <div key={idx} className="flex items-center gap-1.5 mb-0.5">
               <span className={`w-1.5 h-1.5 rounded-full ${item.priority === 'critical' ? 'bg-red-500' : 'bg-amber-500'}`} />
-              <span className="text-[11px] text-stone-700">{item.text}</span>
+              <span className="text-[11.5px] text-stone-500 leading-relaxed">{item.text}</span>
             </div>
           ))}
         </div>

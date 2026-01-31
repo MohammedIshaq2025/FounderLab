@@ -573,12 +573,12 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                 if (systemMapNode) {
                   position = {
                     x: (rootNode?.position?.x || 400) + 318,
-                    y: systemMapNode.position.y - 80,
+                    y: systemMapNode.position.y - 104,
                   };
                 } else if (rootNode) {
                   position = {
                     x: rootNode.position.x + 318,
-                    y: rootNode.position.y - 600,
+                    y: rootNode.position.y - 624,
                   };
                 }
               }
@@ -815,12 +815,12 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                   if (systemMapNode) {
                     position = {
                       x: (rootNode?.position?.x || 400) + 318,
-                      y: systemMapNode.position.y - 80,
+                      y: systemMapNode.position.y - 104,
                     };
                   } else if (rootNode) {
                     position = {
                       x: rootNode.position.x + 318,
-                      y: rootNode.position.y - 600,
+                      y: rootNode.position.y - 624,
                     };
                   }
                 }
