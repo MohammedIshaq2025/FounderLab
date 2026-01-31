@@ -1340,7 +1340,7 @@ function SystemMapNode({ data, id }) {
   ];
 
   return (
-    <Card accentColor="#6366F1" typeLabel="System Map" className="min-w-[302px] max-w-[372px]">
+    <Card accentColor="#6366F1" typeLabel="System Map" className="min-w-[228px] max-w-[284px]">
       <Handle
         type="target"
         position={Position.Bottom}
@@ -1400,6 +1400,9 @@ function SystemMapNode({ data, id }) {
    Context-aware security checklist for Frontend, Backend, Database
    ═══════════════════════════════════════════════════════════════════ */
 function SecurityNode({ data }) {
+  // Debug logging
+  console.log('[SecurityNode] Received data:', JSON.stringify(data, null, 2));
+
   const categories = [
     { key: 'frontend', label: 'Frontend' },
     { key: 'backend', label: 'Backend' },
@@ -1408,18 +1411,24 @@ function SecurityNode({ data }) {
 
   // Validate and normalize items
   const getItems = (category) => {
-    const items = data[category];
-    if (!Array.isArray(items)) return [];
-    return items
+    const items = data?.[category];
+    if (!Array.isArray(items)) {
+      console.log(`[SecurityNode] ${category} is not an array:`, items);
+      return [];
+    }
+    const filtered = items
       .filter((item) => item && typeof item === 'object' && item.item)
       .slice(0, 3)
       .map((item) => ({
         text: item.item,
         priority: item.priority === 'critical' ? 'critical' : 'high',
       }));
+    console.log(`[SecurityNode] ${category} items:`, filtered.length);
+    return filtered;
   };
 
   const hasAnyItems = categories.some((cat) => getItems(cat.key).length > 0);
+  console.log('[SecurityNode] hasAnyItems:', hasAnyItems);
 
   return (
     <Card accentColor="#EF4444" typeLabel="SECURITY" className="min-w-[540px] max-w-[620px]">

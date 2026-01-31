@@ -976,7 +976,25 @@ RULES:
 Return JSON with exactly this shape:
 {{"frontend": [{{"item": "...", "priority": "critical|high"}}], "backend": [{{"item": "...", "priority": "critical|high"}}], "database": [{{"item": "...", "priority": "critical|high"}}]}}"""
 
+    # Fallback function to ensure we always return valid data
+    def get_fallback():
+        return {
+            "frontend": [
+                {"item": "Input validation on all forms", "priority": "critical"},
+                {"item": "XSS prevention via sanitization", "priority": "high"}
+            ],
+            "backend": [
+                {"item": "Rate limiting on auth endpoints", "priority": "critical"},
+                {"item": "Secure token handling", "priority": "high"}
+            ],
+            "database": [
+                {"item": "Row Level Security enabled", "priority": "critical"},
+                {"item": "Encrypted connections", "priority": "high"}
+            ]
+        }
+
     try:
+        print(f"[Security] Generating security checklist for {project_name}")
         response = openai_client.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -985,45 +1003,48 @@ Return JSON with exactly this shape:
             ],
             temperature=0.4,
             max_tokens=600,
+            timeout=30,  # 30 second timeout
             response_format={"type": "json_object"}
         )
         raw = response.choices[0].message.content.strip()
+        print(f"[Security] AI response received: {raw[:200]}...")
         result = json.loads(raw)
 
         # Validate structure
-        if all(key in result for key in ["frontend", "backend", "database"]):
-            # Validate each item has required fields
-            for category in ["frontend", "backend", "database"]:
-                items = result.get(category, [])
-                if not isinstance(items, list):
-                    raise ValueError(f"Invalid {category} format")
-                for item in items:
-                    if not isinstance(item, dict) or "item" not in item:
-                        raise ValueError(f"Invalid item in {category}")
+        if not all(key in result for key in ["frontend", "backend", "database"]):
+            print(f"[Security] Missing required keys in AI response, using fallback")
+            return get_fallback()
+
+        # Validate each item has required fields
+        for category in ["frontend", "backend", "database"]:
+            items = result.get(category, [])
+            if not isinstance(items, list):
+                print(f"[Security] Invalid {category} format, using fallback")
+                return get_fallback()
+
+            validated_items = []
+            for item in items:
+                if isinstance(item, dict) and "item" in item:
                     # Ensure priority is valid, default to "high" if missing/invalid
                     if item.get("priority") not in ["critical", "high"]:
                         item["priority"] = "high"
-                # Limit to 3 items per category
-                result[category] = items[:3]
-            return result
-    except Exception as e:
-        print(f"[Security] AI generation failed: {e}")
+                    validated_items.append(item)
 
-    # Fallback - generic but sensible defaults
-    return {
-        "frontend": [
-            {"item": "Input validation on all forms", "priority": "critical"},
-            {"item": "XSS prevention via sanitization", "priority": "high"}
-        ],
-        "backend": [
-            {"item": "Rate limiting on auth endpoints", "priority": "critical"},
-            {"item": "Secure token handling", "priority": "high"}
-        ],
-        "database": [
-            {"item": "Row Level Security enabled", "priority": "critical"},
-            {"item": "Encrypted connections", "priority": "high"}
-        ]
-    }
+            # Limit to 3 items per category
+            result[category] = validated_items[:3]
+
+        # Ensure each category has at least 1 item, otherwise use fallback items
+        fallback = get_fallback()
+        for category in ["frontend", "backend", "database"]:
+            if len(result[category]) == 0:
+                result[category] = fallback[category]
+
+        print(f"[Security] Successfully generated checklist with {len(result['frontend'])} frontend, {len(result['backend'])} backend, {len(result['database'])} database items")
+        return result
+
+    except Exception as e:
+        print(f"[Security] AI generation failed with error: {type(e).__name__}: {e}")
+        return get_fallback()
 
 
 async def handle_phase3(request: ChatRequest, project: Dict, chat_history: List[Dict], background_tasks: BackgroundTasks = None) -> Dict:
@@ -1546,6 +1567,9 @@ Return as JSON: {{"guidelines": ["Guideline 1", "Guideline 2", "Guideline 3"]}}"
             comp_features,
             project_name
         )
+
+        # Log security checklist for debugging
+        print(f"[Step 5] Security checklist generated: frontend={len(security_checklist.get('frontend', []))}, backend={len(security_checklist.get('backend', []))}, database={len(security_checklist.get('database', []))} items")
 
         summary = f"Your design blueprint is complete! Here's a summary:\n\n"
         summary += f"**Complementary Features:** {', '.join(comp_features)}\n\n"
