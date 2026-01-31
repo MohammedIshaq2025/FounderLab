@@ -541,10 +541,10 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                 if (parentNode) {
                   position = {
                     x: parentNode.position.x,
-                    y: parentNode.position.y + 180,
+                    y: parentNode.position.y + 380,
                   };
                 } else {
-                  position = { x: 400, y: 480 };
+                  position = { x: 400, y: 680 };
                 }
               }
 
