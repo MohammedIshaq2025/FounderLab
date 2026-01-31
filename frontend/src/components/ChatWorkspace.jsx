@@ -541,7 +541,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                 if (parentNode) {
                   position = {
                     x: parentNode.position.x,
-                    y: parentNode.position.y + 380,
+                    y: parentNode.position.y + 360,
                   };
                 } else {
                   position = { x: 400, y: 680 };
@@ -750,7 +750,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                   if (parentNode) {
                     position = {
                       x: parentNode.position.x,
-                      y: parentNode.position.y + 180,
+                      y: parentNode.position.y + 360,
                     };
                   }
                 }
@@ -1353,11 +1353,39 @@ function ChatWorkspace({ projects, onUpdateProject }) {
               onNodesChange={(nodes) => setCanvasState((prev) => ({ ...prev, nodes }))}
               onEdgesChange={(edges) => setCanvasState((prev) => ({ ...prev, edges }))}
               onNodeContentChange={(nodeId, field, value, updatedNodes) => {
+                // Check if a subfeature was ADDED to a feature node
+                // If so, push the corresponding userFlow node down by 36px
+                let finalNodes = updatedNodes;
+                const node = updatedNodes.find(n => n.id === nodeId);
+                if (node && node.type === 'featureGroup' && field === 'subFeatures') {
+                  // Find previous subFeatures count from current canvas state
+                  const prevNode = canvasState.nodes.find(n => n.id === nodeId);
+                  const prevCount = prevNode?.data?.subFeatures?.length || 0;
+                  const newCount = Array.isArray(value) ? value.length : 0;
+
+                  // If subfeature was added (not edited/deleted), push userFlow down
+                  if (newCount > prevCount) {
+                    const addedCount = newCount - prevCount;
+                    finalNodes = updatedNodes.map(n => {
+                      // Find userFlow node that belongs to this feature
+                      if (n.type === 'userFlow' && (n.data?.parentFeatureId === nodeId || n.parentId === nodeId)) {
+                        return {
+                          ...n,
+                          position: {
+                            ...n.position,
+                            y: n.position.y + (36 * addedCount)
+                          }
+                        };
+                      }
+                      return n;
+                    });
+                  }
+                }
+
                 // Update canvas state (triggers auto-save via existing effect)
-                setCanvasState((prev) => ({ ...prev, nodes: updatedNodes }));
+                setCanvasState((prev) => ({ ...prev, nodes: finalNodes }));
 
                 // Also update phase_summaries for phase-related data
-                const node = updatedNodes.find(n => n.id === nodeId);
                 if (node) {
                   // Handle ideation node → update phase_summaries.1
                   if (node.type === 'ideation' && field.startsWith('pillars.')) {

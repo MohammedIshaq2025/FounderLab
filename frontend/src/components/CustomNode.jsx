@@ -1048,11 +1048,11 @@ function UserFlowNode({ data, id }) {
           return (
             <div key={idx} className="relative">
               {!isLast && (
-                <div className="absolute left-[7px] top-[16px] w-px h-[calc(100%+4px)] bg-violet-200" />
+                <div className="absolute left-[6px] top-[18px] w-px h-[calc(100%+2px)] bg-violet-200 z-0" />
               )}
               <div className="flex items-start gap-2.5 group">
                 <span className={cn(
-                  'flex-shrink-0 text-[14px] relative z-10',
+                  'flex-shrink-0 text-[14px] relative z-10 bg-white',
                   isUser ? 'text-violet-600' : 'text-violet-400',
                   isLast && 'text-violet-700'
                 )}>
