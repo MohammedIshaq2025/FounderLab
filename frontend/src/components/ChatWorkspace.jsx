@@ -516,11 +516,15 @@ function ChatWorkspace({ projects, onUpdateProject }) {
               const VALID_NODE_TYPES = new Set(['root', 'default', 'feature', 'tech', 'database', 'ideation', 'featureGroup', 'userFlow', 'complementaryFeatures', 'uiDesign', 'systemMap']);
 
               // Detect if node should be userFlow (handles AI type errors)
+              const nodeLabel = (node.data?.label || '').toLowerCase();
               const isUserFlowNode = (
                 node.id?.toLowerCase().includes('userflow') ||
+                (node.id?.toLowerCase().includes('flow') && node.parentId?.startsWith('feature-')) ||
                 node.data?.steps ||
                 node.data?.parentFeatureId ||
-                node.type?.toLowerCase().replace(/[_-]/g, '') === 'userflow'
+                node.type?.toLowerCase().replace(/[_-]/g, '') === 'userflow' ||
+                nodeLabel.includes('user flow') ||
+                nodeLabel.includes('userflow')
               );
 
               // Normalize the node type

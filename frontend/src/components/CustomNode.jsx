@@ -982,9 +982,23 @@ const EditableFlowStep = ({ value, onSave, onCancel }) => {
 function UserFlowNode({ data, id }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [editingIdx, setEditingIdx] = useState(null);
-  const steps = data.steps || [];
   const onContentChange = data.onContentChange;
   const MAX_STEPS = 6;
+
+  // Normalize steps array - handle various formats AI might output
+  const rawSteps = data.steps || data.subFeatures || [];
+  const steps = rawSteps.map((step, idx) => {
+    if (typeof step === 'string') {
+      // AI might output steps as simple strings
+      const isSystem = ['system', 'app', 'displays', 'shows', 'sends', 'updates', 'validates', 'filters', 'plays'].some(kw => step.toLowerCase().includes(kw));
+      return { action: step, actor: isSystem ? 'system' : 'user' };
+    }
+    // Handle object format with potential field variations
+    return {
+      action: step.action || step.text || step.description || step.label || String(step),
+      actor: step.actor || step.type || (idx % 2 === 0 ? 'user' : 'system')
+    };
+  });
 
   const getIcon = (actor, isLast) => {
     if (isLast) return '◉';

@@ -1697,15 +1697,22 @@ async def chat(request: ChatRequest, background_tasks: BackgroundTasks, user_id:
                     node_data = node.get('data', {})
 
                     # Force userFlow type for nodes that should be userFlow:
-                    # 1. ID contains 'userflow' (case-insensitive)
+                    # 1. ID contains 'userflow' or 'flow' with parent feature (case-insensitive)
                     # 2. Has 'steps' in data (userFlow signature)
                     # 3. Has 'parentFeatureId' in data (userFlow signature)
                     # 4. Type is a case variation of 'userflow'
+                    # 5. Label contains 'user flow' (case-insensitive)
+                    # 6. Parent ID starts with 'feature-' (indicates this is a child of a feature)
+                    node_label = node_data.get('label', '').lower()
+                    parent_id = node.get('parentId', '')
                     is_userflow_node = (
                         'userflow' in node_id.lower() or
+                        ('flow' in node_id.lower() and parent_id.startswith('feature-')) or
                         'steps' in node_data or
                         'parentFeatureId' in node_data or
-                        node_type.lower().replace('_', '').replace('-', '') == 'userflow'
+                        node_type.lower().replace('_', '').replace('-', '') == 'userflow' or
+                        'user flow' in node_label or
+                        'userflow' in node_label
                     )
 
                     if is_userflow_node:
