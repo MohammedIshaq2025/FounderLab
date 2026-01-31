@@ -513,7 +513,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                   : { x: 400, y: 300 };
               }
 
-              const VALID_NODE_TYPES = new Set(['root', 'default', 'feature', 'tech', 'database', 'ideation', 'featureGroup', 'userFlow', 'complementaryFeatures', 'uiDesign', 'systemMap']);
+              const VALID_NODE_TYPES = new Set(['root', 'default', 'feature', 'tech', 'database', 'ideation', 'competitors', 'featureGroup', 'userFlow', 'complementaryFeatures', 'uiDesign', 'systemMap']);
 
               // Detect if node should be userFlow (handles AI type errors)
               const nodeLabel = (node.data?.label || '').toLowerCase();
@@ -548,10 +548,28 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                 }
               }
 
+              // Handle competitors node positioning — 432px to the right of ideation
+              if (normalizedType === 'competitors') {
+                const ideationNode = newNodes.find((n) => n.id === 'ideation');
+                if (ideationNode) {
+                  position = {
+                    x: ideationNode.position.x + 432,
+                    y: ideationNode.position.y,
+                  };
+                } else {
+                  // Fallback position if ideation doesn't exist yet
+                  const rootNode = newNodes.find((n) => n.id === 'root');
+                  position = {
+                    x: (rootNode?.position?.x || 400) + 318 + 432,
+                    y: (rootNode?.position?.y || 300) - 192,
+                  };
+                }
+              }
+
               newNodes.push({
                 id: node.id,
                 type: normalizedType,
-                position,
+                position: position || node.position || { x: 400, y: 300 },
                 data: node.data,
               });
 
@@ -726,7 +744,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                 if (newNodes.find(n => n.id === node.id)) continue;
 
                 let position = node.position || { x: 400, y: 300 };
-                const VALID_NODE_TYPES = new Set(['root', 'default', 'feature', 'tech', 'database', 'ideation', 'featureGroup', 'userFlow', 'complementaryFeatures', 'uiDesign', 'systemMap']);
+                const VALID_NODE_TYPES = new Set(['root', 'default', 'feature', 'tech', 'database', 'ideation', 'competitors', 'featureGroup', 'userFlow', 'complementaryFeatures', 'uiDesign', 'systemMap']);
 
                 // Detect if node should be userFlow (handles AI type errors)
                 const isUserFlowNode = (
@@ -755,10 +773,28 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                   }
                 }
 
+                // Handle competitors node positioning — 432px to the right of ideation
+                if (normalizedType === 'competitors') {
+                  const ideationNode = newNodes.find((n) => n.id === 'ideation');
+                  if (ideationNode) {
+                    position = {
+                      x: ideationNode.position.x + 432,
+                      y: ideationNode.position.y,
+                    };
+                  } else {
+                    // Fallback position if ideation doesn't exist yet
+                    const rootNode = newNodes.find((n) => n.id === 'root');
+                    position = {
+                      x: (rootNode?.position?.x || 400) + 318 + 432,
+                      y: (rootNode?.position?.y || 300) - 192,
+                    };
+                  }
+                }
+
                 newNodes.push({
                   id: node.id,
                   type: normalizedType,
-                  position,
+                  position: position || node.position || { x: 400, y: 300 },
                   data: node.data,
                 });
 

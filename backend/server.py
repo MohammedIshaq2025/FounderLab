@@ -109,14 +109,13 @@ PHASE_PROMPTS = {
 
 Phase 1 (Ideation) — Adaptive Probing:
 
-You must cover exactly 4 pillars before completing ideation:
+You must cover exactly 3 pillars before completing ideation:
 1. Core Problem — What problem does this solve?
 2. Pain Point — What is the main pain users experience today?
 3. Target Audience — Who specifically experiences this problem?
-4. Current Solutions — What do people use today, and why is it insufficient?
 
 ADAPTIVE EXTRACTION (critical):
-- After EVERY user message, scan it for information about ALL four pillars — not just the one you asked about.
+- After EVERY user message, scan it for information about ALL three pillars — not just the one you asked about.
 - If the user genuinely covers multiple pillars with SPECIFIC, CONCRETE detail in one answer, acknowledge what they covered and move to the next uncovered pillar.
 - Do NOT re-ask about a pillar the user has already clearly and specifically answered.
 
@@ -139,30 +138,29 @@ PROBING RULES:
   - "If this problem disappeared tomorrow, what would change in their daily life? That'll help us pin down the real pain."
 - Only probe ONCE per pillar. If the follow-up is still vague, accept it and move forward.
 
-WEB SEARCH FOR CURRENT SOLUTIONS:
-- When discussing the "Current Solutions" pillar, you SHOULD use web search to research competitors and existing tools in the space.
-- Include the search tag in your thinking to trigger a search: mention specific competitor names or the problem domain when asking about current solutions.
-- Reference specific competitors, tools, or apps by name with brief analysis (e.g., "MyFitnessPal focuses on manual logging but lacks AI-powered photo recognition, which is where your idea differentiates").
+COMPETITOR RESEARCH (required):
+- Use web search to research 1-4 competitors in this space.
+- Include both competitors the user mentions AND discover additional ones via web search.
+- For each competitor find: name, brief 1-sentence description, official URL.
 - You may use up to 2 web searches during the ideation phase to ground the conversation in real market data.
 
 COMPLETION:
-When all 4 pillars are covered (whether in 4 messages or fewer), do the following:
+When all 3 pillars are covered (whether in 3 messages or fewer), do the following:
 1. Write a brief summary as a BULLETED LIST — one bullet per pillar with a bold label and a concise 1-sentence summary. Example format:
    - **Core Problem:** [summary]
    - **Pain Point:** [summary]
    - **Target Audience:** [summary]
-   - **Current Solutions:** [summary]
    Then 1 sentence about what makes this idea compelling.
 2. Tell the user to click the "Continue to Feature Mapping" button to proceed.
 3. Emit the following tag (the user will NOT see this tag):
 
-[IDEATION_COMPLETE]{"core_problem": "1-2 sentence summary", "pain_point": "1-2 sentence summary", "target_audience": "1-2 sentence summary", "current_solutions": "1-2 sentence summary"}[/IDEATION_COMPLETE]
+[IDEATION_COMPLETE]{"pillars": {"core_problem": "1-2 sentence summary", "pain_point": "1-2 sentence summary", "target_audience": "1-2 sentence summary"}, "competitors": [{"name": "Competitor Name", "description": "Brief 1-sentence description", "url": "https://example.com"}, ...]}[/IDEATION_COMPLETE]
 
-IMPORTANT: Do NOT emit [PHASE_COMPLETE]. Phase 1 uses manual advancement only.""",
+IMPORTANT: The competitors array MUST contain 1-4 competitors with name, description, and url for each. Do NOT emit [PHASE_COMPLETE]. Phase 1 uses manual advancement only.""",
     
     2: """You are an experienced startup coach and technical expert. Warm, professional, and goal-oriented.
 
-You have context from Phase 1 (Ideation) available in the project context under previous_phase_summary. Use the ideation pillars to ground your feature suggestions in the validated problem, pain point, target audience, and competitive landscape.
+You have context from Phase 1 (Ideation) available in the project context under previous_phase_summary. Use the ideation pillars (core_problem, pain_point, target_audience) and competitors list to ground your feature suggestions in the validated problem, pain point, target audience, and competitive landscape.
 
 Phase 2 (Feature Mapping) — Structured Feature Discovery:
 
@@ -378,11 +376,26 @@ def build_prd_prompt(phase_summaries: Dict, mindmap_data: Dict, project_name: st
     if isinstance(design, str):
         design = json.loads(design)
 
+    # Handle both new format (pillars nested) and legacy format (flat)
+    if "pillars" in ideation:
+        pillars = ideation.get("pillars", {})
+        competitors = ideation.get("competitors", [])
+    else:
+        # Legacy format
+        pillars = ideation
+        competitors = []
+
     # Ideation context
-    core_problem = ideation.get("core_problem", "Not specified")
-    pain_point = ideation.get("pain_point", "Not specified")
-    target_audience = ideation.get("target_audience", "Not specified")
-    current_solutions = ideation.get("current_solutions", "Not specified")
+    core_problem = pillars.get("core_problem", "Not specified")
+    pain_point = pillars.get("pain_point", "Not specified")
+    target_audience = pillars.get("target_audience", "Not specified")
+
+    # Format competitors as current solutions context
+    if competitors:
+        competitor_list = ", ".join([c.get("name", "Unknown") for c in competitors if c.get("name")])
+        current_solutions = f"Competitors: {competitor_list}" if competitor_list else "Not specified"
+    else:
+        current_solutions = pillars.get("current_solutions", "Not specified")
 
     # Features context
     feature_list = ""
@@ -555,10 +568,25 @@ def generate_section1_prompt(phase_summaries: Dict, project_name: str) -> str:
     if isinstance(ideation, str):
         ideation = json.loads(ideation)
 
-    core_problem = ideation.get("core_problem", "Not specified")
-    pain_point = ideation.get("pain_point", "Not specified")
-    target_audience = ideation.get("target_audience", "Not specified")
-    current_solutions = ideation.get("current_solutions", "Not specified")
+    # Handle both new format (pillars nested) and legacy format (flat)
+    if "pillars" in ideation:
+        pillars = ideation.get("pillars", {})
+        competitors = ideation.get("competitors", [])
+    else:
+        # Legacy format
+        pillars = ideation
+        competitors = []
+
+    core_problem = pillars.get("core_problem", "Not specified")
+    pain_point = pillars.get("pain_point", "Not specified")
+    target_audience = pillars.get("target_audience", "Not specified")
+
+    # Format competitors as current solutions context
+    if competitors:
+        competitor_list = ", ".join([c.get("name", "Unknown") for c in competitors if c.get("name")])
+        current_solutions = f"Competitors: {competitor_list}" if competitor_list else "Not specified"
+    else:
+        current_solutions = pillars.get("current_solutions", "Not specified")
 
     return f"""Generate **Section 1: Product Overview** for **{project_name}**. Keep it concise.
 
@@ -653,8 +681,10 @@ def generate_section3_prompt(phase_summaries: Dict, mindmap_data: Dict, project_
     if isinstance(design, str):
         design = json.loads(design)
 
-    core_problem = ideation.get("core_problem", "Not specified")
-    target_audience = ideation.get("target_audience", "Not specified")
+    # Handle both new format (pillars nested) and legacy format (flat)
+    pillars = ideation.get("pillars", ideation) if isinstance(ideation, dict) else {}
+    core_problem = pillars.get("core_problem", "Not specified")
+    target_audience = pillars.get("target_audience", "Not specified")
 
     # Build detailed feature list with user flows
     feature_list = ""
@@ -960,8 +990,9 @@ async def handle_phase3(request: ChatRequest, project: Dict, chat_history: List[
                 feature_list += f"- {title}\n"
 
         ideation = phase_summaries.get("1", {})
-        target_audience = ideation.get("target_audience", "general users") if isinstance(ideation, dict) else "general users"
-        core_problem = ideation.get("core_problem", "the stated problem") if isinstance(ideation, dict) else "the stated problem"
+        pillars = ideation.get("pillars", ideation) if isinstance(ideation, dict) else {}
+        target_audience = pillars.get("target_audience", "general users") if isinstance(pillars, dict) else "general users"
+        core_problem = pillars.get("core_problem", "the stated problem") if isinstance(pillars, dict) else "the stated problem"
         project_name = project.get("name", "the app")
 
         prompt = f"""Given these core features for a {project_name} app:
@@ -1120,7 +1151,8 @@ Return as JSON: {{"features": ["Feature Name: One sentence explaining what this 
 
         project_name = project.get("name", "the app")
         ideation = phase_summaries.get("1", {})
-        core_problem = ideation.get("core_problem", "") if isinstance(ideation, dict) else ""
+        pillars = ideation.get("pillars", ideation) if isinstance(ideation, dict) else {}
+        core_problem = pillars.get("core_problem", "") if isinstance(pillars, dict) else ""
 
         # Tavily search for color palette inspiration
         search_query = f"best color palettes for {project_name} app {selection} theme UI design 2025"
@@ -1305,7 +1337,8 @@ Return as JSON: {{"guidelines": ["Guideline 1", "Guideline 2", "Guideline 3"]}}"
         ideation = phase_summaries.get("1", {})
         if isinstance(ideation, str):
             ideation = json.loads(ideation)
-        core_problem = ideation.get("core_problem", "the stated problem") if isinstance(ideation, dict) else "the stated problem"
+        pillars = ideation.get("pillars", ideation) if isinstance(ideation, dict) else {}
+        core_problem = pillars.get("core_problem", "the stated problem") if isinstance(pillars, dict) else "the stated problem"
 
         tech_stack = generate_tech_stack(phase_summaries, comp_features, project_name, core_problem)
         mindmap_data["tech_stack"] = tech_stack
@@ -1633,8 +1666,9 @@ async def chat(request: ChatRequest, background_tasks: BackgroundTasks, user_id:
                     if isinstance(phase_summaries, str):
                         phase_summaries = json.loads(phase_summaries)
                     ideation = phase_summaries.get("1", {})
-                    problem = ideation.get("core_problem", "") if isinstance(ideation, dict) else ""
-                    audience = ideation.get("target_audience", "") if isinstance(ideation, dict) else ""
+                    pillars = ideation.get("pillars", ideation) if isinstance(ideation, dict) else {}
+                    problem = pillars.get("core_problem", "") if isinstance(pillars, dict) else ""
+                    audience = pillars.get("target_audience", "") if isinstance(pillars, dict) else ""
                     search_query = f"top features for {problem[:80]} app for {audience[:60]}"
                     search_results = web_search(search_query)
                     if search_results and "No results found" not in search_results:
@@ -1679,7 +1713,7 @@ async def chat(request: ChatRequest, background_tasks: BackgroundTasks, user_id:
         canvas_updates = []
         cleaned_response = ai_response
 
-        VALID_NODE_TYPES = {'root', 'feature', 'tech', 'database', 'default', 'ideation', 'featureGroup', 'complementaryFeatures', 'uiDesign', 'systemMap', 'userFlow'}
+        VALID_NODE_TYPES = {'root', 'feature', 'tech', 'database', 'default', 'ideation', 'featureGroup', 'complementaryFeatures', 'uiDesign', 'systemMap', 'userFlow', 'competitors'}
 
         # Extract all canvas updates
         while "[UPDATE_CANVAS]" in cleaned_response:
@@ -1945,26 +1979,68 @@ async def advance_phase(project_id: str, request: AdvancePhaseRequest, backgroun
 
             phase_summaries["1"] = ideation_data
 
+            # Extract pillars and competitors from new format (or use legacy format)
+            # New format: {"pillars": {...}, "competitors": [...]}
+            # Legacy format: {"core_problem": ..., "pain_point": ..., ...}
+            if ideation_data and "pillars" in ideation_data:
+                pillars_data = ideation_data.get("pillars", {})
+                competitors_data = ideation_data.get("competitors", [])
+            else:
+                # Legacy format - treat entire object as pillars, no competitors
+                pillars_data = ideation_data or {}
+                competitors_data = []
+
             # Find root node position
             root_node = next((n for n in canvas_state["nodes"] if n["id"] == "root"), None)
             root_x = root_node["position"]["x"] if root_node else 400
             root_y = root_node["position"]["y"] if root_node else 300
 
-            # Add ideation node if not already present — positioned to the right of root
-            if not any(n["id"] == "ideation" for n in canvas_state["nodes"]):
+            # Check if ideation node already exists
+            existing_ideation = next((n for n in canvas_state["nodes"] if n["id"] == "ideation"), None)
+
+            if existing_ideation:
+                # Use existing ideation position
+                ideation_x = existing_ideation["position"]["x"]
+                ideation_y = existing_ideation["position"]["y"]
+            else:
+                # Calculate new ideation position from root
+                ideation_x = root_x + 318
+                ideation_y = root_y - 192  # Moved down 72px from original -264
+
                 canvas_state["nodes"].append({
                     "id": "ideation",
                     "type": "ideation",
-                    "position": {"x": root_x + 318, "y": root_y - 264},
+                    "position": {"x": ideation_x, "y": ideation_y},
                     "data": {
                         "label": "Ideation",
-                        "pillars": ideation_data or {}
+                        "pillars": pillars_data
                     }
                 })
                 canvas_state["edges"].append({
                     "id": "root-ideation",
                     "source": "root",
                     "target": "ideation",
+                    "sourceHandle": "right",
+                    "type": "smoothstep",
+                    "animated": False,
+                    "style": {"stroke": "#D6D3D1", "strokeWidth": 1.5}
+                })
+
+            # Add competitors node if not already present and we have valid competitors data
+            has_valid_competitors = competitors_data and isinstance(competitors_data, list) and len(competitors_data) > 0
+            if not any(n["id"] == "competitors" for n in canvas_state["nodes"]) and has_valid_competitors:
+                canvas_state["nodes"].append({
+                    "id": "competitors",
+                    "type": "competitors",
+                    "position": {"x": ideation_x + 432, "y": ideation_y},
+                    "data": {
+                        "competitors": competitors_data
+                    }
+                })
+                canvas_state["edges"].append({
+                    "id": "ideation-competitors",
+                    "source": "ideation",
+                    "target": "competitors",
                     "sourceHandle": "right",
                     "type": "smoothstep",
                     "animated": False,

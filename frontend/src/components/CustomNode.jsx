@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Handle, Position } from 'reactflow';
-import { Database, Check, Pencil, X, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { Database, Check, Pencil, X, Plus, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 
 function cn(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -816,7 +816,6 @@ const PILLAR_LABELS = {
   core_problem: 'Core Problem',
   pain_point: 'Pain Point',
   target_audience: 'Target Audience',
-  current_solutions: 'Current Solutions',
 };
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -849,9 +848,83 @@ function IdeationNode({ data, id }) {
 
       <Handle
         type="source"
+        position={Position.Right}
+        id="right"
+        className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
+      />
+      <Handle
+        type="source"
         position={Position.Bottom}
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
+    </Card>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CompetitorsNode — Cyan accent, external links
+   ═══════════════════════════════════════════════════════════════════ */
+function CompetitorsNode({ data }) {
+  const rawCompetitors = data.competitors || [];
+
+  // Filter out malformed entries and limit to 4
+  const competitors = rawCompetitors
+    .filter((comp) => comp && typeof comp === 'object' && comp.name)
+    .slice(0, 4);
+
+  // Helper to ensure URL has protocol
+  const normalizeUrl = (url) => {
+    if (!url || typeof url !== 'string') return null;
+    const trimmed = url.trim();
+    if (!trimmed) return null;
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    return `https://${trimmed}`;
+  };
+
+  return (
+    <Card accentColor="#06B6D4" typeLabel="Competitors" className="min-w-[240px] max-w-[320px]">
+      <Handle
+        type="target"
+        position={Position.Left}
+        className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
+      />
+
+      <div className="px-3 py-2.5 space-y-2.5">
+        {competitors.length === 0 ? (
+          <p className="text-[11px] text-stone-400 italic">No competitors identified</p>
+        ) : (
+          competitors.map((comp, idx) => {
+            const url = normalizeUrl(comp.url);
+            return (
+              <div key={idx} className="group">
+                <div className="flex items-center gap-2">
+                  <span className="text-[12px] font-semibold text-stone-700">
+                    {comp.name}
+                  </span>
+                  {url && (
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-cyan-500 hover:text-cyan-600 transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
+                {comp.description && (
+                  <p className="text-[11px] text-stone-500 leading-relaxed mt-0.5">
+                    {comp.description}
+                  </p>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
     </Card>
   );
 }
@@ -1321,6 +1394,7 @@ function SystemMapNode({ data, id }) {
    ═══════════════════════════════════════════════════════════════════ */
 function CustomNode({ data, type, id }) {
   if (type === 'ideation') return <IdeationNode data={data} id={id} />;
+  if (type === 'competitors') return <CompetitorsNode data={data} />;
   if (type === 'featureGroup') return <FeatureGroupNode data={data} id={id} />;
   if (type === 'userFlow') return <UserFlowNode data={data} id={id} />;
   if (type === 'complementaryFeatures') return <ComplementaryFeaturesNode data={data} id={id} />;

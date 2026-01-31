@@ -20,6 +20,7 @@ const NODE_TYPES = {
   tech: CustomNode,
   database: CustomNode,
   ideation: CustomNode,
+  competitors: CustomNode,
   featureGroup: CustomNode,
   userFlow: CustomNode,
   complementaryFeatures: CustomNode,
