@@ -234,7 +234,7 @@ USER FLOW EXAMPLE (for "User Authentication"):
   {"action": "User sees dashboard with welcome message", "actor": "user"}
 ]}
 
-IMPORTANT: You MUST include BOTH [UPDATE_CANVAS]...[/UPDATE_CANVAS] blocks (one for feature, one for userflow). They are automatically hidden from the user. Without them, nothing appears on the canvas.
+CRITICAL: You MUST include BOTH [UPDATE_CANVAS]...[/UPDATE_CANVAS] JSON blocks (one for feature, one for userflow). Do NOT just describe user flows in text — you MUST emit the JSON tag. The tags are automatically hidden from the user. Without both JSON blocks, nothing appears on the canvas properly.
 
 COMPLETION:
 After 3+ features on canvas, ask: "You have N features mapped. Want to add more, or are you ready to move on to Architecture?"
@@ -1709,8 +1709,10 @@ async def chat(request: ChatRequest, background_tasks: BackgroundTasks, user_id:
                 features_parsed = []
                 current_feature = None
 
+                in_user_flow = False
                 for line in lines:
                     stripped = line.strip()
+
                     # Check for a feature heading: bold text on its own (not a bullet sub-item)
                     heading_match = re.match(r'^\*\*([^*]+)\*\*\s*$', stripped)
                     # Also match numbered headings like "1. **Title**" or "**Title**"
@@ -1719,11 +1721,29 @@ async def chat(request: ChatRequest, background_tasks: BackgroundTasks, user_id:
                     if heading_match:
                         if current_feature and current_feature['subs']:
                             features_parsed.append(current_feature)
-                        current_feature = {'title': heading_match.group(1).strip(), 'subs': []}
+                        current_feature = {'title': heading_match.group(1).strip(), 'subs': [], 'userFlowSteps': []}
+                        in_user_flow = False
                         continue
 
-                    # Check for sub-feature bullet: - **Label**: description  OR  - description
+                    # Check for "User Flow:" section marker
+                    if current_feature is not None and re.match(r'^(user\s*flow|user-flow):?\s*$', stripped, re.IGNORECASE):
+                        in_user_flow = True
+                        continue
+
+                    # Check for sub-feature bullet or user flow step
                     if current_feature is not None:
+                        # User flow steps (numbered or bulleted under User Flow section)
+                        if in_user_flow:
+                            step_match = re.match(r'^[-•*]?\s*(\d+\.)?\s*(.+)', stripped)
+                            if step_match and step_match.group(2):
+                                step_text = step_match.group(2).strip()
+                                if step_text and len(step_text) > 3:  # Filter out empty/short lines
+                                    # Determine actor based on keywords
+                                    actor = 'system' if any(kw in step_text.lower() for kw in ['system', 'app', 'displays', 'shows', 'sends', 'updates', 'validates', 'filters', 'plays']) else 'user'
+                                    current_feature['userFlowSteps'].append({'action': step_text, 'actor': actor})
+                            continue
+
+                        # Sub-feature bullets (not in user flow section)
                         sub_bold = re.match(r'^-\s+\*\*([^*]+)\*\*:\s*(.+)', stripped)
                         if sub_bold:
                             current_feature['subs'].append(f"{sub_bold.group(1).strip()}: {sub_bold.group(2).strip()}")
@@ -1756,6 +1776,24 @@ async def chat(request: ChatRequest, background_tasks: BackgroundTasks, user_id:
                                 "parentId": "root"
                             }
                         })
+
+                        # Also create userFlow node if we parsed user flow steps
+                        user_flow_steps = feat.get('userFlowSteps', [])
+                        if user_flow_steps and len(user_flow_steps) >= 2:
+                            # Limit to 6 steps max
+                            steps_to_use = user_flow_steps[:6]
+                            canvas_updates.append({
+                                "action": "add_node",
+                                "node": {
+                                    "id": f"userflow-{existing_feature_count + i + 1}",
+                                    "type": "userFlow",
+                                    "data": {
+                                        "parentFeatureId": feature_id,
+                                        "steps": steps_to_use
+                                    },
+                                    "parentId": feature_id
+                                }
+                            })
             except Exception:
                 pass
 
