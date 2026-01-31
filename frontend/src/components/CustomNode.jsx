@@ -1430,53 +1430,52 @@ function SecurityNode({ data }) {
   const hasAnyItems = categories.some((cat) => getItems(cat.key).length > 0);
   console.log('[SecurityNode] hasAnyItems:', hasAnyItems);
 
+  // Get all items for rendering
+  const frontendItems = getItems('frontend');
+  const backendItems = getItems('backend');
+  const databaseItems = getItems('database');
+
   return (
-    <Card accentColor="#EF4444" typeLabel="SECURITY" className="min-w-[540px] max-w-[620px]">
+    <Card accentColor="#EF4444" typeLabel="SECURITY" className="min-w-[320px] max-w-[400px]">
       <Handle
         type="target"
         position={Position.Left}
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
 
-      <div className="px-3 pt-3.5 pb-3.5">
-        {!hasAnyItems ? (
-          <p className="text-[11px] text-stone-400 italic">No security requirements generated</p>
-        ) : (
-          <div className="grid grid-cols-3 gap-2.5">
-            {categories.map(({ key, label }) => {
-              const items = getItems(key);
-              return (
-                <div
-                  key={key}
-                  className="bg-stone-50/80 rounded-lg px-2.5 py-2 border border-stone-100"
-                >
-                  <p className="text-[10px] uppercase font-semibold text-stone-500 mb-1.5 tracking-wide">
-                    {label}
-                  </p>
-                  <div className="space-y-1">
-                    {items.length === 0 ? (
-                      <p className="text-[10px] text-stone-400 italic">None</p>
-                    ) : (
-                      items.map((item, idx) => (
-                        <div key={idx} className="flex items-start gap-1.5">
-                          <span
-                            className={cn(
-                              'mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0',
-                              item.priority === 'critical' ? 'bg-red-500' : 'bg-amber-500'
-                            )}
-                          />
-                          <span className="text-[11px] text-stone-700 leading-snug">
-                            {item.text}
-                          </span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+      <div className="px-3 py-3 space-y-2">
+        {/* Frontend Section */}
+        <div className="bg-stone-50 rounded-md p-2 border border-stone-200">
+          <p className="text-[10px] uppercase font-semibold text-stone-600 mb-1">Frontend</p>
+          {frontendItems.map((item, idx) => (
+            <div key={idx} className="flex items-center gap-1.5 mb-0.5">
+              <span className={`w-1.5 h-1.5 rounded-full ${item.priority === 'critical' ? 'bg-red-500' : 'bg-amber-500'}`} />
+              <span className="text-[11px] text-stone-700">{item.text}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Backend Section */}
+        <div className="bg-stone-50 rounded-md p-2 border border-stone-200">
+          <p className="text-[10px] uppercase font-semibold text-stone-600 mb-1">Backend</p>
+          {backendItems.map((item, idx) => (
+            <div key={idx} className="flex items-center gap-1.5 mb-0.5">
+              <span className={`w-1.5 h-1.5 rounded-full ${item.priority === 'critical' ? 'bg-red-500' : 'bg-amber-500'}`} />
+              <span className="text-[11px] text-stone-700">{item.text}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Database Section */}
+        <div className="bg-stone-50 rounded-md p-2 border border-stone-200">
+          <p className="text-[10px] uppercase font-semibold text-stone-600 mb-1">Database</p>
+          {databaseItems.map((item, idx) => (
+            <div key={idx} className="flex items-center gap-1.5 mb-0.5">
+              <span className={`w-1.5 h-1.5 rounded-full ${item.priority === 'critical' ? 'bg-red-500' : 'bg-amber-500'}`} />
+              <span className="text-[11px] text-stone-700">{item.text}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </Card>
   );
