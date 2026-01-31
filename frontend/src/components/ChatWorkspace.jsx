@@ -1409,7 +1409,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                           ...n,
                           position: {
                             ...n.position,
-                            y: n.position.y + (36 * addedCount)
+                            y: n.position.y + (72 * addedCount)
                           }
                         };
                       }
