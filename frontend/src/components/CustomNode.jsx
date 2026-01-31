@@ -1025,7 +1025,7 @@ function UserFlowNode({ data, id }) {
 
   // Expanded view - timeline
   return (
-    <Card accentColor="#7C3AED" typeLabel="USER FLOW" className="min-w-[240px] max-w-[320px]">
+    <Card accentColor="#7C3AED" typeLabel="USER FLOW" className="min-w-[228px] max-w-[284px]">
       <Handle type="target" position={Position.Top} className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white" />
 
       {/* Collapse header */}
