@@ -139,7 +139,7 @@ PROBING RULES:
 - Only probe ONCE per pillar. If the follow-up is still vague, accept it and move forward.
 
 COMPETITOR RESEARCH (required):
-- Use web search to research 1-4 competitors in this space.
+- Use web search to research 3-4 competitors in this space. You MUST find at least 3.
 - Include both competitors the user mentions AND discover additional ones via web search.
 - For each competitor find: name, brief 1-sentence description, official URL.
 - You may use up to 2 web searches during the ideation phase to ground the conversation in real market data.
@@ -156,7 +156,7 @@ When all 3 pillars are covered (whether in 3 messages or fewer), do the followin
 
 [IDEATION_COMPLETE]{"pillars": {"core_problem": "1-2 sentence summary", "pain_point": "1-2 sentence summary", "target_audience": "1-2 sentence summary"}, "competitors": [{"name": "Competitor Name", "description": "Brief 1-sentence description", "url": "https://example.com"}, ...]}[/IDEATION_COMPLETE]
 
-IMPORTANT: The competitors array MUST contain 1-4 competitors with name, description, and url for each. Do NOT emit [PHASE_COMPLETE]. Phase 1 uses manual advancement only.""",
+IMPORTANT: The competitors array MUST contain 3-4 competitors with name, description, and url for each. Do NOT emit [PHASE_COMPLETE]. Phase 1 uses manual advancement only.""",
     
     2: """You are an experienced startup coach and technical expert. Warm, professional, and goal-oriented.
 
