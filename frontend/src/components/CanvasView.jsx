@@ -7,6 +7,7 @@ import ReactFlow, {
   useReactFlow,
   ReactFlowProvider,
   MarkerType,
+  getBezierPath,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import CustomNode from './CustomNode';
@@ -20,12 +21,27 @@ const NODE_TYPES = {
   database: CustomNode,
   ideation: CustomNode,
   featureGroup: CustomNode,
+  userFlow: CustomNode,
   complementaryFeatures: CustomNode,
   uiDesign: CustomNode,
   systemMap: CustomNode,
 };
 
-function CanvasViewInner({ nodes: initialNodes, edges: initialEdges, onNodesChange, onEdgesChange }) {
+// Custom dotted edge for user flow connections
+function DottedEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }) {
+  const [edgePath] = getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition });
+  return (
+    <path
+      id={id}
+      d={edgePath}
+      style={{ stroke: '#7C3AED', strokeWidth: 1.5, strokeDasharray: '4 4', fill: 'none' }}
+    />
+  );
+}
+
+const EDGE_TYPES = { dotted: DottedEdge };
+
+function CanvasViewInner({ nodes: initialNodes, edges: initialEdges, onNodesChange, onEdgesChange, onNodeContentChange }) {
   const [nodes, setNodes, onNodesChangeInternal] = useNodesState([]);
   const [edges, setEdges, onEdgesChangeInternal] = useEdgesState([]);
   const { fitView, getViewport } = useReactFlow();
@@ -38,9 +54,66 @@ function CanvasViewInner({ nodes: initialNodes, edges: initialEdges, onNodesChan
   const edgesRef = useRef(edges);
   useEffect(() => { edgesRef.current = edges; }, [edges]);
 
+  // Stable callback ref for content changes
+  const onNodeContentChangeRef = useRef(onNodeContentChange);
+  useEffect(() => { onNodeContentChangeRef.current = onNodeContentChange; }, [onNodeContentChange]);
+
+  // Handler for node content edits - updates local state and propagates to parent
+  // Supports both nested field paths ("pillars.core_problem") and direct field updates ("subFeatures")
+  const handleNodeContentChange = useCallback((nodeId, field, value) => {
+    setNodes((nds) => {
+      const updatedNodes = nds.map((node) => {
+        if (node.id !== nodeId) return node;
+
+        // Deep clone the data to update nested fields
+        const newData = { ...node.data };
+
+        // Handle nested field paths like "pillars.core_problem" or "subFeatures.0"
+        // Also handle direct field updates like "subFeatures" (when setting entire array)
+        if (field.includes('.')) {
+          const parts = field.split('.');
+          let current = newData;
+          for (let i = 0; i < parts.length - 1; i++) {
+            const key = parts[i];
+            if (Array.isArray(current[key])) {
+              current[key] = [...current[key]];
+            } else if (typeof current[key] === 'object') {
+              current[key] = { ...current[key] };
+            }
+            current = current[key];
+          }
+          current[parts[parts.length - 1]] = value;
+        } else {
+          // Direct field update (e.g., setting entire "subFeatures" array)
+          newData[field] = Array.isArray(value) ? [...value] : value;
+        }
+
+        return { ...node, data: newData };
+      });
+
+      // Propagate to parent for persistence
+      if (onNodeContentChangeRef.current) {
+        const updatedNode = updatedNodes.find(n => n.id === nodeId);
+        if (updatedNode) {
+          onNodeContentChangeRef.current(nodeId, field, value, updatedNodes);
+        }
+      }
+
+      return updatedNodes;
+    });
+  }, [setNodes]);
+
   React.useEffect(() => {
     if (initialNodes) {
-      setNodes(initialNodes);
+      // Inject onContentChange callback into each node's data
+      const nodesWithCallback = initialNodes.map(node => ({
+        ...node,
+        data: {
+          ...node.data,
+          onContentChange: handleNodeContentChange,
+        }
+      }));
+      setNodes(nodesWithCallback);
       // Only fitView once on initial load (0 → some nodes), not on every update
       if (initialNodes.length > 0 && !hasFitted.current) {
         hasFitted.current = true;
@@ -54,7 +127,7 @@ function CanvasViewInner({ nodes: initialNodes, edges: initialEdges, onNodesChan
         hasFitted.current = false;
       }
     }
-  }, [initialNodes, setNodes, fitView]);
+  }, [initialNodes, setNodes, fitView, handleNodeContentChange]);
 
   React.useEffect(() => {
     if (initialEdges) {
@@ -131,6 +204,7 @@ function CanvasViewInner({ nodes: initialNodes, edges: initialEdges, onNodesChan
         onNodesChange={handleNodesChange}
         onEdgesChange={handleEdgesChange}
         nodeTypes={NODE_TYPES}
+        edgeTypes={EDGE_TYPES}
         minZoom={0.3}
         maxZoom={1.5}
         style={{ background: '#F5F5F4' }}

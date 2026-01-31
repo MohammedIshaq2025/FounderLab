@@ -95,6 +95,14 @@ class DocumentRequest(BaseModel):
     project_id: str
     doc_type: str  # 'features', 'tech_stack', 'prd'
 
+class PhaseDataUpdate(BaseModel):
+    project_id: str
+    phase: int
+    field: str
+    value: Any
+    node_id: Optional[str] = None
+    node_data: Optional[Dict[str, Any]] = None
+
 # Phase prompts
 PHASE_PROMPTS = {
     1: """You are an experienced startup coach and technical expert with deep expertise in building successful products. You are warm, friendly, yet professional and goal-oriented.
@@ -192,27 +200,50 @@ EXPLICIT APPROVAL EXAMPLES (follow these exactly):
 - "Add option 1" or "Yes add it" or "Add that one" → NOW add to canvas with detailed sub-features.
 
 CANVAS UPDATES (CRITICAL — you MUST follow this exactly):
-Every time you summarize and finalize a feature, you MUST include the following tag block in your response. The system will automatically strip it before the user sees your message, so the user will never see the raw tag. But you MUST include it or the feature will NOT appear on the canvas.
+Every time you summarize and finalize a feature, you MUST include TWO tag blocks in your response:
+1. The feature node itself
+2. A user flow node showing the step-by-step journey through this feature
 
-Your response text should say "Adding [Feature Name] to your canvas..." AND ALSO include this tag block somewhere in the same response:
+Your response text should say "Adding [Feature Name] to your canvas..." AND ALSO include BOTH tag blocks somewhere in the same response:
 
 [UPDATE_CANVAS]
 {"action": "add_node", "node": {"id": "feature-N", "type": "featureGroup", "data": {"label": "Feature Title", "subFeatures": ["Sub-feature Name: Clear 1-sentence description of what this does", "Sub-feature Name: Clear 1-sentence description", "Sub-feature Name: Clear 1-sentence description"]}, "parentId": "root"}}
 [/UPDATE_CANVAS]
 
+[UPDATE_CANVAS]
+{"action": "add_node", "node": {"id": "userflow-N", "type": "userFlow", "data": {"parentFeatureId": "feature-N", "steps": [{"action": "User clicks button", "actor": "user"}, {"action": "System shows modal", "actor": "system"}, {"action": "User enters data", "actor": "user"}, {"action": "System validates and saves", "actor": "system"}, {"action": "User sees confirmation", "actor": "user"}]}, "parentId": "feature-N"}}
+[/UPDATE_CANVAS]
+
 Use type "featureGroup" (NOT "feature") for feature nodes with sub-entries. Increment N for each feature (feature-1, feature-2, etc.).
 Each sub-feature MUST include a bold-able name followed by a colon and a clear description. Never use vague placeholders like "Sub-feature 1".
 
-IMPORTANT: You MUST include the [UPDATE_CANVAS]...[/UPDATE_CANVAS] block. It is automatically hidden from the user. Without it, nothing appears on the canvas.
+USER FLOW RULES (for the userflow-N node):
+- 3-6 steps maximum (abstract if more needed)
+- Alternate user actions and system responses where appropriate
+- First step: user action that triggers the feature
+- Last step: outcome/result state
+- Be specific to THIS feature, not generic
+- Each step has "action" (what happens) and "actor" ("user" or "system")
+
+USER FLOW EXAMPLE (for "User Authentication"):
+{"steps": [
+  {"action": "User clicks Login button", "actor": "user"},
+  {"action": "System displays login modal", "actor": "system"},
+  {"action": "User enters email and password", "actor": "user"},
+  {"action": "System validates credentials", "actor": "system"},
+  {"action": "User sees dashboard with welcome message", "actor": "user"}
+]}
+
+IMPORTANT: You MUST include BOTH [UPDATE_CANVAS]...[/UPDATE_CANVAS] blocks (one for feature, one for userflow). They are automatically hidden from the user. Without them, nothing appears on the canvas.
 
 COMPLETION:
-After 3+ features on canvas, ask: "You have N features mapped. Want to add more, or are you ready to move on to MindMapping?"
+After 3+ features on canvas, ask: "You have N features mapped. Want to add more, or are you ready to move on to Architecture?"
 If user says ready/done/move on:
 1. Write a summary as a BULLETED LIST — one bullet per feature with the feature name bolded and a 1-sentence description. Example format:
    - **Feature Name:** Brief description of what it does
    - **Feature Name:** Brief description of what it does
    Then 1 sentence wrapping up.
-2. Tell the user to click the "Continue to MindMapping" button to proceed
+2. Tell the user to click the "Continue to Architecture" button to proceed
 3. Emit:
 [FEATURES_COMPLETE]{"features": [{"title": "Feature Title", "subFeatures": ["sub1", "sub2"]}, ...]}[/FEATURES_COMPLETE]
 
@@ -620,15 +651,26 @@ def generate_section3_prompt(phase_summaries: Dict, mindmap_data: Dict, project_
     core_problem = ideation.get("core_problem", "Not specified")
     target_audience = ideation.get("target_audience", "Not specified")
 
-    # Build detailed feature list
+    # Build detailed feature list with user flows
     feature_list = ""
     if isinstance(features_summary, dict) and "features" in features_summary:
         for i, f in enumerate(features_summary["features"], 1):
             title = f.get("title", f"Feature {i}")
             subs = f.get("subFeatures", [])
+            user_flow = f.get("userFlow", {})
+            steps = user_flow.get("steps", []) if isinstance(user_flow, dict) else []
+
             feature_list += f"\n**Feature {i}: {title}**\n"
             for sub in subs:
                 feature_list += f"  - {sub}\n"
+
+            if steps:
+                feature_list += f"\n  **User Flow:**\n"
+                for step in steps:
+                    actor = step.get("actor", "user") if isinstance(step, dict) else "user"
+                    action = step.get("action", str(step)) if isinstance(step, dict) else str(step)
+                    icon = "○" if actor == "user" else "◆"
+                    feature_list += f"    {icon} {action}\n"
 
     comp_features = design.get("complementary_features", [])
     comp_list = "\n".join(f"- {cf}" for cf in comp_features) if comp_features else "None"
@@ -661,15 +703,20 @@ For EACH feature, use this structure:
 #### 3.N.1 User story
 - 1-2 user stories ("As a [user], I want [action], so that [benefit]")
 
-#### 3.N.2 UI behavior
+#### 3.N.2 User flow
+- Step-by-step journey through this feature (if user flow data provided above, use it)
+- Format: ○ for user actions, ◆ for system responses
+- Example: ○ User clicks button → ◆ System shows modal → ○ User submits form → ◆ System saves data
+
+#### 3.N.3 UI behavior
 - Components/screens involved
 - Key states: loading, success, error, empty
 
-#### 3.N.3 Data & API (Supabase)
+#### 3.N.4 Data & API (Supabase)
 - Name the tables involved and key operations (create, read, update, delete)
 - No code snippets, no query syntax — just plain English
 
-#### 3.N.4 Acceptance criteria
+#### 3.N.5 Acceptance criteria
 - 3-5 testable bullet points (pass/fail)
 
 Core features first (P0), then complementary (P1). Be specific but concise. No tables or code blocks — use only headings, bullets, and bold."""
@@ -1627,7 +1674,7 @@ async def chat(request: ChatRequest, background_tasks: BackgroundTasks, user_id:
         canvas_updates = []
         cleaned_response = ai_response
 
-        VALID_NODE_TYPES = {'root', 'feature', 'tech', 'database', 'default', 'ideation', 'featureGroup', 'complementaryFeatures', 'uiDesign', 'systemMap'}
+        VALID_NODE_TYPES = {'root', 'feature', 'tech', 'database', 'default', 'ideation', 'featureGroup', 'complementaryFeatures', 'uiDesign', 'systemMap', 'userFlow'}
 
         # Extract all canvas updates
         while "[UPDATE_CANVAS]" in cleaned_response:
@@ -1866,6 +1913,22 @@ async def advance_phase(project_id: str, request: AdvancePhaseRequest, backgroun
             if not feature_data and project.get("feature_data"):
                 stored = project["feature_data"]
                 feature_data = json.loads(stored) if isinstance(stored, str) else stored
+
+            # Extract userFlow data from canvas nodes and merge into feature_data
+            if feature_data and isinstance(feature_data, dict) and "features" in feature_data:
+                for node in canvas_state.get("nodes", []):
+                    if node.get("type") == "userFlow":
+                        node_data = node.get("data", {})
+                        parent_feature_id = node_data.get("parentFeatureId", "")
+                        steps = node_data.get("steps", [])
+                        if parent_feature_id and steps:
+                            # Extract feature index from parent_feature_id (e.g., "feature-1" -> 0)
+                            try:
+                                feature_idx = int(parent_feature_id.split("-")[1]) - 1
+                                if 0 <= feature_idx < len(feature_data["features"]):
+                                    feature_data["features"][feature_idx]["userFlow"] = {"steps": steps}
+                            except (ValueError, IndexError):
+                                pass
 
             phase_summaries["2"] = feature_data
 
@@ -2126,6 +2189,100 @@ async def get_canvas(project_id: str, user_id: str = Depends(get_current_user)):
     except HTTPException:
         raise
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/projects/update-phase-data")
+async def update_phase_data(update: PhaseDataUpdate, user_id: str = Depends(get_current_user)):
+    """Update phase_summaries or mindmap_data when user edits node content"""
+    try:
+        project = await verify_project_ownership(update.project_id, user_id)
+
+        if update.phase == 1:
+            # Update ideation pillars in phase_summaries["1"]
+            phase_summaries = project.get("phase_summaries") or {}
+            if isinstance(phase_summaries, str):
+                phase_summaries = json.loads(phase_summaries)
+
+            if "1" not in phase_summaries:
+                phase_summaries["1"] = {}
+
+            phase_summaries["1"][update.field] = update.value
+
+            # Also update ideation_pillars column for backup
+            ideation_pillars = project.get("ideation_pillars") or {}
+            if isinstance(ideation_pillars, str):
+                ideation_pillars = json.loads(ideation_pillars)
+            ideation_pillars[update.field] = update.value
+
+            supabase.table("projects").update({
+                "phase_summaries": json.dumps(phase_summaries),
+                "ideation_pillars": json.dumps(ideation_pillars)
+            }).eq("id", update.project_id).execute()
+
+        elif update.phase == 2:
+            # Update feature data in phase_summaries["2"]
+            phase_summaries = project.get("phase_summaries") or {}
+            if isinstance(phase_summaries, str):
+                phase_summaries = json.loads(phase_summaries)
+
+            if "2" not in phase_summaries:
+                phase_summaries["2"] = {"features": []}
+
+            # Find and update the feature by matching node_id pattern (feature-N)
+            if update.node_id:
+                features = phase_summaries["2"].get("features", [])
+                # Extract feature index from node_id (e.g., "feature-1" -> 0, feature-2 -> 1)
+                try:
+                    feature_idx = int(update.node_id.split("-")[1]) - 1  # feature-1 = index 0
+                    if 0 <= feature_idx < len(features):
+                        # Check if this is a userFlow update or a regular feature update
+                        if update.field == "userFlow" and update.value:
+                            # Update userFlow data for the feature
+                            features[feature_idx]["userFlow"] = update.value
+                        elif update.node_data:
+                            # Update the feature with new data
+                            features[feature_idx] = {
+                                "title": update.node_data.get("label", features[feature_idx].get("title", "")),
+                                "subFeatures": update.node_data.get("subFeatures", features[feature_idx].get("subFeatures", [])),
+                                "userFlow": features[feature_idx].get("userFlow", {})  # Preserve existing userFlow
+                            }
+                        phase_summaries["2"]["features"] = features
+                except (ValueError, IndexError):
+                    pass
+
+            # Also update feature_data column for backup
+            supabase.table("projects").update({
+                "phase_summaries": json.dumps(phase_summaries),
+                "feature_data": json.dumps(phase_summaries["2"])
+            }).eq("id", update.project_id).execute()
+
+        elif update.phase == 3:
+            # Update mindmap_data and phase_summaries["3"]
+            mindmap_data = project.get("mindmap_data") or {}
+            if isinstance(mindmap_data, str):
+                mindmap_data = json.loads(mindmap_data)
+
+            phase_summaries = project.get("phase_summaries") or {}
+            if isinstance(phase_summaries, str):
+                phase_summaries = json.loads(phase_summaries)
+
+            if "3" not in phase_summaries:
+                phase_summaries["3"] = {}
+
+            # Update the specific field
+            mindmap_data[update.field] = update.value
+            phase_summaries["3"][update.field] = update.value
+
+            supabase.table("projects").update({
+                "mindmap_data": json.dumps(mindmap_data),
+                "phase_summaries": json.dumps(phase_summaries)
+            }).eq("id", update.project_id).execute()
+
+        return {"success": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating phase data: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/documents/generate")

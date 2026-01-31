@@ -513,7 +513,21 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                   : { x: 400, y: 300 };
               }
 
-              const VALID_NODE_TYPES = new Set(['root', 'default', 'feature', 'tech', 'database', 'ideation', 'featureGroup', 'complementaryFeatures', 'uiDesign', 'systemMap']);
+              const VALID_NODE_TYPES = new Set(['root', 'default', 'feature', 'tech', 'database', 'ideation', 'featureGroup', 'userFlow', 'complementaryFeatures', 'uiDesign', 'systemMap']);
+
+              // Handle userFlow node positioning — directly below parent feature
+              if (node.type === 'userFlow' && node.parentId) {
+                const parentNode = newNodes.find((n) => n.id === node.parentId);
+                if (parentNode) {
+                  position = {
+                    x: parentNode.position.x,
+                    y: parentNode.position.y + 180,
+                  };
+                } else {
+                  position = { x: 400, y: 480 };
+                }
+              }
+
               newNodes.push({
                 id: node.id,
                 type: VALID_NODE_TYPES.has(node.type) ? node.type : 'feature',
@@ -522,14 +536,19 @@ function ChatWorkspace({ projects, onUpdateProject }) {
               });
 
               if (node.parentId) {
-                newEdges.push({
+                const isUserFlowEdge = node.type === 'userFlow';
+                const edge = {
                   id: `${node.parentId}-${node.id}`,
                   source: node.parentId,
                   target: node.id,
-                  type: 'smoothstep',
+                  sourceHandle: 'bottom',
+                  type: isUserFlowEdge ? 'dotted' : 'smoothstep',
                   animated: false,
-                  style: { stroke: '#D6D3D1', strokeWidth: 1.5 },
-                });
+                  style: isUserFlowEdge
+                    ? { stroke: '#7C3AED', strokeWidth: 1.5, strokeDasharray: '4 4' }
+                    : { stroke: '#D6D3D1', strokeWidth: 1.5 },
+                };
+                newEdges.push(edge);
               }
             }
           }
@@ -686,8 +705,20 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                 const node = update.node;
                 if (newNodes.find(n => n.id === node.id)) continue;
 
-                const position = node.position || { x: 400, y: 300 };
-                const VALID_NODE_TYPES = new Set(['root', 'default', 'feature', 'tech', 'database', 'ideation', 'featureGroup', 'complementaryFeatures', 'uiDesign', 'systemMap']);
+                let position = node.position || { x: 400, y: 300 };
+                const VALID_NODE_TYPES = new Set(['root', 'default', 'feature', 'tech', 'database', 'ideation', 'featureGroup', 'userFlow', 'complementaryFeatures', 'uiDesign', 'systemMap']);
+
+                // Handle userFlow node positioning — directly below parent feature
+                if (node.type === 'userFlow' && node.parentId) {
+                  const parentNode = newNodes.find((n) => n.id === node.parentId);
+                  if (parentNode) {
+                    position = {
+                      x: parentNode.position.x,
+                      y: parentNode.position.y + 180,
+                    };
+                  }
+                }
+
                 newNodes.push({
                   id: node.id,
                   type: VALID_NODE_TYPES.has(node.type) ? node.type : 'feature',
@@ -696,6 +727,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                 });
 
                 if (node.parentId) {
+                  const isUserFlowEdge = node.type === 'userFlow';
                   const sourceHandle = node.id === 'ui-design' ? 'left'
                     : node.id === 'system-map' ? 'top'
                     : 'bottom';
@@ -704,9 +736,11 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                     source: node.parentId,
                     target: node.id,
                     sourceHandle,
-                    type: 'smoothstep',
+                    type: isUserFlowEdge ? 'dotted' : 'smoothstep',
                     animated: false,
-                    style: { stroke: '#D6D3D1', strokeWidth: 1.5 },
+                    style: isUserFlowEdge
+                      ? { stroke: '#7C3AED', strokeWidth: 1.5, strokeDasharray: '4 4' }
+                      : { stroke: '#D6D3D1', strokeWidth: 1.5 },
                   };
                   if (node.id === 'ui-design') {
                     edge.targetHandle = 'right';
@@ -1023,7 +1057,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
     const names = {
       1: 'Ideation',
       2: 'Feature Mapping',
-      3: 'MindMapping',
+      3: 'Architecture',
       4: 'PRD Generation',
       5: 'Export',
     };
@@ -1033,7 +1067,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
   const PHASES = [
     { number: 1, name: 'Ideation', icon: Lightbulb },
     { number: 2, name: 'Features', icon: GitBranch },
-    { number: 3, name: 'MindMap', icon: Network },
+    { number: 3, name: 'Arch', icon: Network },
     { number: 4, name: 'PRD', icon: FileTextIcon },
     { number: 5, name: 'Export', icon: Download },
   ];
@@ -1253,7 +1287,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                   isContinueLoading={isContinueLoading}
                   continueLabel={
                     phase === 1 ? 'Continue to Feature Mapping'
-                    : phase === 2 ? 'Continue to MindMapping'
+                    : phase === 2 ? 'Continue to Architecture'
                     : 'Continue to PRD Generation'
                   }
                   onDownloadAction={phase === 5 ? handleDownloadAction : undefined}
@@ -1282,6 +1316,73 @@ function ChatWorkspace({ projects, onUpdateProject }) {
               edges={canvasState.edges}
               onNodesChange={(nodes) => setCanvasState((prev) => ({ ...prev, nodes }))}
               onEdgesChange={(edges) => setCanvasState((prev) => ({ ...prev, edges }))}
+              onNodeContentChange={(nodeId, field, value, updatedNodes) => {
+                // Update canvas state (triggers auto-save via existing effect)
+                setCanvasState((prev) => ({ ...prev, nodes: updatedNodes }));
+
+                // Also update phase_summaries for phase-related data
+                const node = updatedNodes.find(n => n.id === nodeId);
+                if (node) {
+                  // Handle ideation node → update phase_summaries.1
+                  if (node.type === 'ideation' && field.startsWith('pillars.')) {
+                    const pillarKey = field.split('.')[1];
+                    api.post('/api/projects/update-phase-data', {
+                      project_id: projectId,
+                      phase: 1,
+                      field: pillarKey,
+                      value: value
+                    }).catch(err => console.error('Error updating ideation data:', err));
+                  }
+                  // Handle feature nodes → update phase_summaries.2
+                  else if (node.type === 'featureGroup') {
+                    // For full array updates (from modal), send entire node data
+                    api.post('/api/projects/update-phase-data', {
+                      project_id: projectId,
+                      phase: 2,
+                      node_id: nodeId,
+                      field: field,
+                      value: value,
+                      node_data: node.data
+                    }).catch(err => console.error('Error updating feature data:', err));
+                  }
+                  // Handle complementary features → update mindmap_data
+                  else if (node.type === 'complementaryFeatures') {
+                    // 'features' field holds the full array
+                    api.post('/api/projects/update-phase-data', {
+                      project_id: projectId,
+                      phase: 3,
+                      field: 'complementary_features',
+                      value: Array.isArray(value) ? value : node.data.features
+                    }).catch(err => console.error('Error updating complementary features:', err));
+                  }
+                  // Handle system map → update mindmap_data.tech_stack
+                  else if (node.type === 'systemMap') {
+                    // For section updates (frontend/backend/database), update full tech stack
+                    api.post('/api/projects/update-phase-data', {
+                      project_id: projectId,
+                      phase: 3,
+                      field: 'tech_stack',
+                      value: {
+                        frontend: node.data.frontend,
+                        backend: node.data.backend,
+                        database: node.data.database
+                      }
+                    }).catch(err => console.error('Error updating tech stack:', err));
+                  }
+                  // Handle userFlow nodes → update phase_summaries.2 with user flow data
+                  else if (node.type === 'userFlow' && field === 'steps') {
+                    // Find parent feature and update its userFlow data
+                    const parentFeatureId = node.data.parentFeatureId;
+                    api.post('/api/projects/update-phase-data', {
+                      project_id: projectId,
+                      phase: 2,
+                      node_id: parentFeatureId,
+                      field: 'userFlow',
+                      value: { steps: value }
+                    }).catch(err => console.error('Error updating user flow:', err));
+                  }
+                }
+              }}
             />
           </div>
         )}
