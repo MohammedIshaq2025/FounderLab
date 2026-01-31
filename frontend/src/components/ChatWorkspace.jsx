@@ -513,7 +513,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                   : { x: 400, y: 300 };
               }
 
-              const VALID_NODE_TYPES = new Set(['root', 'default', 'feature', 'tech', 'database', 'ideation', 'competitors', 'featureGroup', 'userFlow', 'complementaryFeatures', 'uiDesign', 'systemMap']);
+              const VALID_NODE_TYPES = new Set(['root', 'default', 'feature', 'tech', 'database', 'ideation', 'competitors', 'featureGroup', 'userFlow', 'complementaryFeatures', 'uiDesign', 'systemMap', 'security']);
 
               // Detect if node should be userFlow (handles AI type errors)
               const nodeLabel = (node.data?.label || '').toLowerCase();
@@ -562,6 +562,23 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                   position = {
                     x: (rootNode?.position?.x || 400) + 318 + 432,
                     y: (rootNode?.position?.y || 300) - 192,
+                  };
+                }
+              }
+
+              // Handle security node positioning — right of system map, same Y
+              if (normalizedType === 'security') {
+                const systemMapNode = newNodes.find((n) => n.id === 'system-map');
+                const rootNode = newNodes.find((n) => n.id === 'root');
+                if (systemMapNode) {
+                  position = {
+                    x: (rootNode?.position?.x || 400) + 318,
+                    y: systemMapNode.position.y,
+                  };
+                } else if (rootNode) {
+                  position = {
+                    x: rootNode.position.x + 318,
+                    y: rootNode.position.y - 520,
                   };
                 }
               }
@@ -744,7 +761,7 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                 if (newNodes.find(n => n.id === node.id)) continue;
 
                 let position = node.position || { x: 400, y: 300 };
-                const VALID_NODE_TYPES = new Set(['root', 'default', 'feature', 'tech', 'database', 'ideation', 'competitors', 'featureGroup', 'userFlow', 'complementaryFeatures', 'uiDesign', 'systemMap']);
+                const VALID_NODE_TYPES = new Set(['root', 'default', 'feature', 'tech', 'database', 'ideation', 'competitors', 'featureGroup', 'userFlow', 'complementaryFeatures', 'uiDesign', 'systemMap', 'security']);
 
                 // Detect if node should be userFlow (handles AI type errors)
                 const isUserFlowNode = (
@@ -787,6 +804,23 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                     position = {
                       x: (rootNode?.position?.x || 400) + 318 + 432,
                       y: (rootNode?.position?.y || 300) - 192,
+                    };
+                  }
+                }
+
+                // Handle security node positioning — right of system map, same Y
+                if (normalizedType === 'security') {
+                  const systemMapNode = newNodes.find((n) => n.id === 'system-map');
+                  const rootNode = newNodes.find((n) => n.id === 'root');
+                  if (systemMapNode) {
+                    position = {
+                      x: (rootNode?.position?.x || 400) + 318,
+                      y: systemMapNode.position.y,
+                    };
+                  } else if (rootNode) {
+                    position = {
+                      x: rootNode.position.x + 318,
+                      y: rootNode.position.y - 520,
                     };
                   }
                 }

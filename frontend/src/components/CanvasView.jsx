@@ -26,6 +26,7 @@ const NODE_TYPES = {
   complementaryFeatures: CustomNode,
   uiDesign: CustomNode,
   systemMap: CustomNode,
+  security: CustomNode,
 };
 
 // Custom dotted edge for user flow connections

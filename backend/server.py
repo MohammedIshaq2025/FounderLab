@@ -924,6 +924,108 @@ Return JSON with exactly this shape:
     }
 
 
+def generate_security_checklist(phase_summaries: Dict, tech_stack: Dict, complementary_features: list, project_name: str) -> Dict:
+    """Generate context-aware security requirements based on features and tech stack."""
+
+    # Gather features from Phase 2
+    features_summary = phase_summaries.get("2", {})
+    if isinstance(features_summary, str):
+        features_summary = json.loads(features_summary)
+
+    feature_list = ""
+    if isinstance(features_summary, dict) and "features" in features_summary:
+        for f in features_summary["features"]:
+            title = f.get("title", "")
+            subs = f.get("subFeatures", [])
+            feature_list += f"\n- {title}: {', '.join(subs)}"
+    elif isinstance(features_summary, list):
+        for f in features_summary:
+            title = f.get("title", str(f)) if isinstance(f, dict) else str(f)
+            feature_list += f"\n- {title}"
+
+    comp_list = "\n".join(f"- {cf}" for cf in complementary_features) if complementary_features else "None"
+
+    # Tech stack context
+    frontend_tech = ", ".join(tech_stack.get("frontend", [])) or "React"
+    backend_tech = ", ".join(tech_stack.get("backend", [])) or "Supabase"
+    database_tech = ", ".join(tech_stack.get("database", [])) or "PostgreSQL"
+
+    prompt = f"""You are a senior security architect. Based on the following product features and tech stack, identify the most critical security requirements.
+
+**Project:** {project_name}
+
+**Features:**
+{feature_list}
+
+**Complementary Features:**
+{comp_list}
+
+**Tech Stack:**
+- Frontend: {frontend_tech}
+- Backend: {backend_tech}
+- Database: {database_tech}
+
+RULES:
+1. Analyze the features to identify security-sensitive areas (authentication, file uploads, payments, PII storage, APIs, etc.)
+2. Generate security requirements SPECIFIC to this project's features and tech stack
+3. Each category (frontend, backend, database) should have 2-3 items
+4. Each item must be concise (under 8 words) and actionable
+5. Priority is either "critical" (must-have before launch) or "high" (should-have before launch)
+6. At least 1 item per category should be "critical"
+
+Return JSON with exactly this shape:
+{{"frontend": [{{"item": "...", "priority": "critical|high"}}], "backend": [{{"item": "...", "priority": "critical|high"}}], "database": [{{"item": "...", "priority": "critical|high"}}]}}"""
+
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a senior security architect. Return ONLY valid JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.4,
+            max_tokens=600,
+            response_format={"type": "json_object"}
+        )
+        raw = response.choices[0].message.content.strip()
+        result = json.loads(raw)
+
+        # Validate structure
+        if all(key in result for key in ["frontend", "backend", "database"]):
+            # Validate each item has required fields
+            for category in ["frontend", "backend", "database"]:
+                items = result.get(category, [])
+                if not isinstance(items, list):
+                    raise ValueError(f"Invalid {category} format")
+                for item in items:
+                    if not isinstance(item, dict) or "item" not in item:
+                        raise ValueError(f"Invalid item in {category}")
+                    # Ensure priority is valid, default to "high" if missing/invalid
+                    if item.get("priority") not in ["critical", "high"]:
+                        item["priority"] = "high"
+                # Limit to 3 items per category
+                result[category] = items[:3]
+            return result
+    except Exception as e:
+        print(f"[Security] AI generation failed: {e}")
+
+    # Fallback - generic but sensible defaults
+    return {
+        "frontend": [
+            {"item": "Input validation on all forms", "priority": "critical"},
+            {"item": "XSS prevention via sanitization", "priority": "high"}
+        ],
+        "backend": [
+            {"item": "Rate limiting on auth endpoints", "priority": "critical"},
+            {"item": "Secure token handling", "priority": "high"}
+        ],
+        "database": [
+            {"item": "Row Level Security enabled", "priority": "critical"},
+            {"item": "Encrypted connections", "priority": "high"}
+        ]
+    }
+
+
 async def handle_phase3(request: ChatRequest, project: Dict, chat_history: List[Dict], background_tasks: BackgroundTasks = None) -> Dict:
     """Deterministic step controller for Phase 3 (MindMapping as Guided Flow)"""
     project_id = request.project_id
@@ -1437,6 +1539,14 @@ Return as JSON: {{"guidelines": ["Guideline 1", "Guideline 2", "Guideline 3"]}}"
         tech_stack = mindmap_data.get("tech_stack", {})
         project_name = project.get("name", "the app")
 
+        # Generate context-aware security checklist
+        security_checklist = generate_security_checklist(
+            phase_summaries,
+            tech_stack,
+            comp_features,
+            project_name
+        )
+
         summary = f"Your design blueprint is complete! Here's a summary:\n\n"
         summary += f"**Complementary Features:** {', '.join(comp_features)}\n\n"
         summary += f"**Theme:** {theme.capitalize()}\n\n"
@@ -1474,9 +1584,29 @@ Return as JSON: {{"guidelines": ["Guideline 1", "Guideline 2", "Guideline 3"]}}"
             }
         })
 
+        # Security node — positioned to the RIGHT of System Map (same Y, ideation X)
+        sec_x = root_x + 318  # Same X as ideation
+        sec_y = root_y - 520  # Same Y as system map
+
+        canvas_updates.append({
+            "action": "add_node",
+            "node": {
+                "id": "security",
+                "type": "security",
+                "position": {"x": sec_x, "y": sec_y},
+                "data": {
+                    "label": "Security",
+                    "frontend": security_checklist.get("frontend", []),
+                    "backend": security_checklist.get("backend", []),
+                    "database": security_checklist.get("database", []),
+                },
+                "parentId": "system-map"
+            }
+        })
+
         save_assistant_msg(summary)
 
-        # Save phase summary (now includes tech_stack)
+        # Save phase summary (now includes tech_stack and security_checklist)
         phase_summaries["3"] = {
             "complementary_features": comp_features,
             "theme": theme,
@@ -1484,6 +1614,7 @@ Return as JSON: {{"guidelines": ["Guideline 1", "Guideline 2", "Guideline 3"]}}"
             "design_style": design_style,
             "design_guidelines": design_guidelines,
             "tech_stack": tech_stack,
+            "security_checklist": security_checklist,
         }
 
         # Apply canvas updates to canvas_state
@@ -1498,8 +1629,17 @@ Return as JSON: {{"guidelines": ["Guideline 1", "Guideline 2", "Guideline 3"]}}"
                         "data": node["data"],
                     })
                     if node.get("parentId"):
-                        source_handle = "left" if node["id"] == "ui-design" else "bottom"
-                        target_handle = "right" if node["id"] == "ui-design" else None
+                        # Determine handle positions based on node type
+                        if node["id"] == "ui-design":
+                            source_handle = "left"
+                            target_handle = "right"
+                        elif node["id"] == "security":
+                            source_handle = "right"
+                            target_handle = "left"
+                        else:
+                            source_handle = "bottom"
+                            target_handle = None
+
                         edge = {
                             "id": f"{node['parentId']}-{node['id']}",
                             "source": node["parentId"],
@@ -1713,7 +1853,7 @@ async def chat(request: ChatRequest, background_tasks: BackgroundTasks, user_id:
         canvas_updates = []
         cleaned_response = ai_response
 
-        VALID_NODE_TYPES = {'root', 'feature', 'tech', 'database', 'default', 'ideation', 'featureGroup', 'complementaryFeatures', 'uiDesign', 'systemMap', 'userFlow', 'competitors'}
+        VALID_NODE_TYPES = {'root', 'feature', 'tech', 'database', 'default', 'ideation', 'featureGroup', 'complementaryFeatures', 'uiDesign', 'systemMap', 'userFlow', 'competitors', 'security'}
 
         # Extract all canvas updates
         while "[UPDATE_CANVAS]" in cleaned_response:
@@ -1759,6 +1899,7 @@ async def chat(request: ChatRequest, background_tasks: BackgroundTasks, user_id:
                             'complementaryfeatures': 'complementaryFeatures',
                             'uidesign': 'uiDesign',
                             'systemmap': 'systemMap',
+                            'security': 'security',
                         }
                         canvas_update['node']['type'] = type_mapping.get(node_type_lower, 'feature')
 

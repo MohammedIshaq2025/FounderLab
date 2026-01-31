@@ -819,14 +819,14 @@ const PILLAR_LABELS = {
 };
 
 /* ═══════════════════════════════════════════════════════════════════
-   1. IdeationNode — terra accent
+   1. IdeationNode — rose accent
    ═══════════════════════════════════════════════════════════════════ */
 function IdeationNode({ data, id }) {
   const pillars = data.pillars || {};
   const onContentChange = data.onContentChange;
 
   return (
-    <Card accentColor="#E8613C" typeLabel="Ideation" className="min-w-[268px] max-w-[320px]">
+    <Card accentColor="#E11D48" typeLabel="Ideation" className="min-w-[268px] max-w-[320px]">
       <Handle
         type="target"
         position={Position.Left}
@@ -1278,11 +1278,11 @@ function ComplementaryFeaturesNode({ data, id }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   4. UIDesignNode — rose accent (not editable)
+   4. UIDesignNode — terra accent (not editable)
    ═══════════════════════════════════════════════════════════════════ */
 function UIDesignNode({ data }) {
   return (
-    <Card accentColor="#E11D48" typeLabel="UI Design" className="min-w-[268px] max-w-[320px]">
+    <Card accentColor="#E8613C" typeLabel="UI Design" className="min-w-[268px] max-w-[320px]">
       <Handle
         type="target"
         position={Position.Right}
@@ -1385,12 +1385,96 @@ function SystemMapNode({ data, id }) {
         position={Position.Top}
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right"
+        className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
+      />
     </Card>
   );
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   6. Root + Fallback — CustomNode dispatcher
+   6. SecurityNode — red accent, 3-column layout
+   Context-aware security checklist for Frontend, Backend, Database
+   ═══════════════════════════════════════════════════════════════════ */
+function SecurityNode({ data }) {
+  const categories = [
+    { key: 'frontend', label: 'Frontend' },
+    { key: 'backend', label: 'Backend' },
+    { key: 'database', label: 'Database' },
+  ];
+
+  // Validate and normalize items
+  const getItems = (category) => {
+    const items = data[category];
+    if (!Array.isArray(items)) return [];
+    return items
+      .filter((item) => item && typeof item === 'object' && item.item)
+      .slice(0, 3)
+      .map((item) => ({
+        text: item.item,
+        priority: item.priority === 'critical' ? 'critical' : 'high',
+      }));
+  };
+
+  const hasAnyItems = categories.some((cat) => getItems(cat.key).length > 0);
+
+  return (
+    <Card accentColor="#EF4444" typeLabel="SECURITY" className="min-w-[540px] max-w-[620px]">
+      <Handle
+        type="target"
+        position={Position.Left}
+        className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
+      />
+
+      <div className="px-3 pt-3.5 pb-3.5">
+        {!hasAnyItems ? (
+          <p className="text-[11px] text-stone-400 italic">No security requirements generated</p>
+        ) : (
+          <div className="grid grid-cols-3 gap-2.5">
+            {categories.map(({ key, label }) => {
+              const items = getItems(key);
+              return (
+                <div
+                  key={key}
+                  className="bg-stone-50/80 rounded-lg px-2.5 py-2 border border-stone-100"
+                >
+                  <p className="text-[10px] uppercase font-semibold text-stone-500 mb-1.5 tracking-wide">
+                    {label}
+                  </p>
+                  <div className="space-y-1">
+                    {items.length === 0 ? (
+                      <p className="text-[10px] text-stone-400 italic">None</p>
+                    ) : (
+                      items.map((item, idx) => (
+                        <div key={idx} className="flex items-start gap-1.5">
+                          <span
+                            className={cn(
+                              'mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0',
+                              item.priority === 'critical' ? 'bg-red-500' : 'bg-amber-500'
+                            )}
+                          />
+                          <span className="text-[11px] text-stone-700 leading-snug">
+                            {item.text}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   7. Root + Fallback — CustomNode dispatcher
    ═══════════════════════════════════════════════════════════════════ */
 function CustomNode({ data, type, id }) {
   if (type === 'ideation') return <IdeationNode data={data} id={id} />;
@@ -1400,6 +1484,7 @@ function CustomNode({ data, type, id }) {
   if (type === 'complementaryFeatures') return <ComplementaryFeaturesNode data={data} id={id} />;
   if (type === 'uiDesign') return <UIDesignNode data={data} id={id} />;
   if (type === 'systemMap') return <SystemMapNode data={data} id={id} />;
+  if (type === 'security') return <SecurityNode data={data} />;
 
   const isRoot = type === 'root';
 
