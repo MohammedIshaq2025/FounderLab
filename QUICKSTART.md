@@ -90,9 +90,9 @@ The canvas appears on the right side. The AI will:
 - Start with core features first
 - Let AI research feasibility
 - Watch nodes appear on canvas
-- Click "Continue to MindMapping" when features are complete
+- Click "Continue to Architecture" when features are complete
 
-### Phase 3: MindMapping
+### Phase 3: Architecture
 
 The AI recommends:
 

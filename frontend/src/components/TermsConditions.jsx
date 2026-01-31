@@ -106,7 +106,7 @@ function TermsConditions() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-terra-500 mt-1.5">•</span>
-                    <span>Visual mind mapping and architecture visualization</span>
+                    <span>Visual architecture canvas and system visualization</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-terra-500 mt-1.5">•</span>

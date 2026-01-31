@@ -2,13 +2,13 @@
 
 ## What This Is
 
-A visual PRD generator that guides startup founders from raw idea to export-ready PRD through 5 AI-powered phases, with a live mind-mapping canvas that builds as the conversation progresses.
+A visual PRD generator that guides startup founders from raw idea to export-ready PRD through 5 AI-powered phases, with a live architecture canvas that builds as the conversation progresses.
 
 ## User Journey (5 Phases)
 
 1. **Ideation** — Chat-only. AI startup coach probes: core idea, pain point, solution, target audience. No canvas yet.
 2. **Feature Mapping** — Chat + Canvas appear. AI proposes 2-4 core features, does competitor research, checks feasibility. Nodes appear on canvas as features are confirmed.
-3. **MindMapping** — AI organizes features into structured framework on canvas. Adds tech stack node, database node. Generates tech docs.
+3. **Architecture** — AI organizes features into structured framework on canvas. Adds tech stack node, database node. Generates tech docs.
 4. **PRD Generation** — AI synthesizes all context into a comprehensive PRD optimized for agentic dev systems (Cursor, Claude Code). Saves to documents.
 5. **Export** — AI guides download. All docs available as MD/PDF.
 
@@ -240,7 +240,7 @@ R:\FounderLab\
 
 - **Phase 1 (Ideation)**: One question at a time, probes 4 pillars (problem, pain, audience, solutions). Emits `[IDEATION_COMPLETE]` when done. Manual advance via button.
 - **Phase 2 (Feature Mapping)**: Structured discovery — user proposes features or AI suggests (with Tavily search). 2-message flow per feature (clarify → summarize + add to canvas). Uses `featureGroup` node type with sub-features. Emits `[FEATURES_COMPLETE]` when 3+ features done. Manual advance via button.
-- **Phase 3 (MindMapping)**: 5-step deterministic guided flow (no free-form chat):
+- **Phase 3 (Architecture)**: 5-step deterministic guided flow (no free-form chat):
   - **Step 1** — Complementary Features: AI suggests features based on Phase 2 core features, user multi-selects. Creates `complementaryFeatures` canvas node.
   - **Step 2** — Theme: User picks light/dark. Triggers Tavily web search for color palettes.
   - **Step 3** — Color Palette: AI generates 3 palettes (from web search results), user picks one.

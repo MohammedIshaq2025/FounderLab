@@ -110,6 +110,63 @@ This document records the founder's confirmed design preferences. Reference befo
 - **Database** (`database`): White card, Database icon (amber).
 - Sub-feature text renders label before `:` as `font-semibold text-stone-700`
 
+### Canvas Node Editing
+
+- **Frictionless in-place editing**: Text transforms directly into editable field — same exact view, multi-line support
+- **Title edit icon**: Appears to the RIGHT of the title (`ml-2`) when hovering the title row
+- **Sub-element edit icon**: Appears inside card at TOP-RIGHT corner (`top-1 right-1`) when hovering
+- **Edit mode**: Text becomes auto-resizing textarea (no scrollbar) or transparent input, preserving original styling
+- **Multi-line editing**: Uses auto-resize textarea — Enter saves, Shift+Enter for new lines
+- **Input styling**: `bg-transparent border-teal-400`, underline style for inline items, full border for cards
+- **Save button**: Emerald checkmark (`w-5 h-5 bg-emerald-500`) replaces edit icon position (inside top-right)
+- **Cancel button**: Stone X button (`w-5 h-5 bg-stone-200`) appears next to checkmark
+- **Save triggers**: Click checkmark, press Enter (Shift+Enter for new line in multi-line fields)
+- **Cancel triggers**: Click X button, press Escape, or click outside on canvas
+
+**Edit icon styling:**
+- Size: `w-5 h-5` for sub-elements, `w-4 h-4` for tech items
+- Appearance: `bg-white border-stone-200 shadow-sm rounded-md`
+- Hover: `bg-stone-50 border-stone-300`
+- Transition: Fades in with scale (`opacity-0 scale-90` → `opacity-100 scale-100`)
+
+**Action buttons (when editing):**
+- Position: Inside card at `top-1 right-1` (slightly inset, not overlapping edge)
+- Check button: `w-5 h-5 bg-emerald-500 rounded` with white Check icon
+- X button: `w-5 h-5 bg-stone-200 rounded` with stone-600 X icon
+- Spacing: `gap-0.5` between buttons
+
+**Editable nodes:**
+
+| Node Type | Editable Fields |
+| --------- | --------------- |
+| `ideation` | Each pillar card (Core Problem, Pain Point, Target Audience, Current Solutions) — multi-line |
+| `featureGroup` | Title (inline, icon on right) + each sub-feature card (multi-line, icon on top-right) |
+| `complementaryFeatures` | Title (inline, icon on right) + each feature card (multi-line, icon on top-right) |
+| `systemMap` | Section headers (Frontend/Backend/Database) + each tech item (inline with underline) |
+| `uiDesign` | Not editable (colors/theme are structured selections) |
+| `root` | Not editable (project name set elsewhere) |
+
+**Persistence**: Changes auto-save to canvas_state AND update phase_summaries via `/api/projects/update-phase-data`
+
+### Adding Sub-features
+
+- **Add button**: Teal Plus icon (`w-5 h-5`) **always visible** on the RIGHT side of Feature Group and Complementary Features node titles
+- **Add button styling**: `bg-teal-500 shadow-sm` with white Plus icon, hover: `bg-teal-600`
+- **Header layout**: `flex items-center gap-2 overflow-hidden` — keeps Plus button neatly inside the card (EditableTitle uses `min-w-0 flex-1` to allow shrinking)
+- **Modal trigger**: Clicking Plus icon opens AddSubFeatureModal popup
+- **Modal rendering**: Uses `createPortal` to render at document body level (prevents ReactFlow transform issues)
+- **Modal design**:
+  - Lightweight centered popup with teal accent strip at top
+  - Header: Plus icon in `bg-teal-500 shadow-sm` square (matching node Plus buttons) + "Add Sub-feature" title + X close button
+  - Form fields:
+    - Title (required): `bg-stone-50 border-stone-200`, focus: `border-stone-400` (charcoal, clean/minimal)
+    - Description (optional): multi-line textarea, same styling
+  - Action buttons: Cancel (stone-100) + Save (emerald-500, disabled when title empty)
+  - Backdrop: `bg-stone-950/30 backdrop-blur-[1px]`, click outside to close
+- **Keyboard shortcuts**: Enter to save (when title filled), Escape to cancel
+- **Data format**: Saved as "Title: Description" or just "Title" if no description
+- **Persistence**: New sub-feature added to array, propagated through `onContentChange` to backend
+
 ### Modals & Confirmation Dialogs
 
 - Backdrop: `bg-stone-950/50 dark:bg-black/60 backdrop-blur-[2px]`, click to dismiss
@@ -194,7 +251,7 @@ This document records the founder's confirmed design preferences. Reference befo
 |-------|------|--------------|------------------|-----------------|
 | 1 | Ideation | `#E8613C` (terra) | `#FDEBE6` | `#2D1A15` |
 | 2 | Feature Mapping | `#D97706` (amber) | `#FEF3C7` | `#2D2305` |
-| 3 | MindMapping | `#7C3AED` (violet) | `#EDE9FE` | `#251539` |
+| 3 | Architecture | `#7C3AED` (violet) | `#EDE9FE` | `#251539` |
 | 4 | PRD Generation | `#BE123C` (rose) | `#FFE4E6` | `#2D1318` |
 | 5 | Export | `#0D9488` (teal) | `#CCFBF1` | `#0A2D29` |
 | Sidebar section labels | `text-stone-400` | `text-stone-400` (same) |

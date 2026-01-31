@@ -4,7 +4,7 @@ import { Check } from 'lucide-react';
 const PHASES = [
   { number: 1, name: 'Ideation', short: 'Ideation' },
   { number: 2, name: 'Feature Mapping', short: 'Features' },
-  { number: 3, name: 'MindMapping', short: 'MindMap' },
+  { number: 3, name: 'Architecture', short: 'Arch' },
   { number: 4, name: 'PRD Generation', short: 'PRD' },
   { number: 5, name: 'Export', short: 'Export' },
 ];

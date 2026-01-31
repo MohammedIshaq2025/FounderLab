@@ -1,12 +1,12 @@
 # FounderLab - Visual PRD Generator
 
-Transform your startup idea into a polished, AI-ready PRD through an intelligent conversational interface paired with dynamic visual mind mapping.
+Transform your startup idea into a polished, AI-ready PRD through an intelligent conversational interface paired with dynamic visual architecture diagrams.
 
 ## Features
 
-- **5-Phase Journey**: Ideation → Feature Mapping → MindMapping → PRD Generation → Export
+- **5-Phase Journey**: Ideation → Feature Mapping → Architecture → PRD Generation → Export
 - **AI-Powered Coach**: GPT-4o guides you through each phase with probing questions
-- **Visual Canvas**: Interactive mind map with React Flow
+- **Visual Canvas**: Interactive architecture diagram with React Flow
 - **Web Research**: Integrated Tavily API for competitor research
 - **Document Generation**: Export as Markdown and PDF
 - **User Authentication**: Supabase Auth with email + password, Row Level Security
@@ -109,9 +109,9 @@ FounderLab uses Supabase Auth for user authentication:
 - Define 2-4 core features with AI assistance
 - AI researches competitors and feasibility
 - Features appear as nodes on canvas
-- Click "Continue to MindMapping" when ready
+- Click "Continue to Architecture" when ready
 
-### Phase 3: MindMapping
+### Phase 3: Architecture
 
 - AI organizes features into structured framework
 - Tech stack and database nodes added to canvas

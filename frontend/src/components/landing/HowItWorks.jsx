@@ -78,7 +78,7 @@ export default function HowItWorks() {
       number: '03',
       title: 'Architecture',
       headline: 'Map the system',
-      description: 'Visualize your product structure with an interactive mind map of components and connections.',
+      description: 'Visualize your product structure with an interactive architecture diagram of components and connections.',
       icon: Network,
     },
     {

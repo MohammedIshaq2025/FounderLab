@@ -35,7 +35,7 @@
 ## Architecture
 - Frontend runs on port 3000, proxies `/api` to backend on port 8001
 - All state persisted to Supabase
-- 5-phase user journey: Ideation -> Feature Mapping -> MindMapping -> PRD Generation -> Export
+- 5-phase user journey: Ideation -> Feature Mapping -> Architecture -> PRD Generation -> Export
 - Phases 1, 2, 3 use manual "Continue" button advancement; Phase 4+ auto-advances
 
 ## Authentication & Security

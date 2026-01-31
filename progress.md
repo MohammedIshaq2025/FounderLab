@@ -2,6 +2,34 @@
 
 ---
 
+## 2026-01-31 — Phase 3 Rename: MindMapping → Architecture
+
+### User-Facing Labels Updated
+
+- **ProgressBar.jsx** — Phase 3: `'MindMapping'` → `'Architecture'`, short name `'MindMap'` → `'Arch'`
+- **Dashboard.jsx** — Phase name map: `3: 'Architecture'`
+- **ChatWorkspace.jsx** — Phase name, compact tab label (`'Arch'`), button label (`'Continue to Architecture'`)
+- **server.py** — AI prompts updated: "move on to Architecture", "Continue to Architecture" button reference
+
+### Landing Pages Updated
+
+- **Features.jsx** — "live mindmap" → "live canvas"
+- **HowItWorks.jsx** — "interactive mind map" → "interactive architecture diagram"
+- **Pricing.jsx** — "Visual mindmap canvas" → "Visual architecture canvas", spec label updated
+- **TermsConditions.jsx** — "Visual mind mapping" → "Visual architecture canvas"
+
+### Documentation Updated
+
+- **CLAUDE.md**, **README.md**, **QUICKSTART.md**, **CONTEXT.md**, **design.md** — All phase references updated
+
+### Preserved for Backwards Compatibility
+
+- Internal variable names: `mindmapStep`, `mindmapData`, `mindmapComplete`, `handleContinueToMindMapping`
+- Database column: `mindmap_data`
+- API response fields: `mindmap_step`, `mindmap_complete`
+
+---
+
 ## 2026-01-27 — Production UI Overhaul (Charcoal + Terracotta)
 
 ### Foundation

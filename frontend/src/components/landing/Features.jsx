@@ -58,7 +58,7 @@ export default function Features() {
       number: '02',
       icon: Workflow,
       title: 'Visual Canvas',
-      description: 'Watch your PRD take shape on a live mindmap as you build — real-time visualization of your product architecture.',
+      description: 'Watch your PRD take shape on a live canvas as you build — real-time visualization of your product architecture.',
     },
     {
       number: '03',

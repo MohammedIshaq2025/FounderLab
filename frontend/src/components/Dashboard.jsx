@@ -90,7 +90,7 @@ function Dashboard({ projects, onCreateProject, onDeleteProject, onRefresh }) {
     const names = {
       1: 'Ideation',
       2: 'Feature Mapping',
-      3: 'MindMapping',
+      3: 'Architecture',
       4: 'PRD Generation',
       5: 'Export',
     };
