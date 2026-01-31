@@ -1295,6 +1295,7 @@ function UIDesignNode({ data }) {
       <Handle
         type="target"
         position={Position.Right}
+        id="right"
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
 
@@ -1353,6 +1354,7 @@ function SystemMapNode({ data, id }) {
       <Handle
         type="target"
         position={Position.Bottom}
+        id="bottom"
         className="!w-2 !h-2 !border-2 !border-stone-300 !bg-white"
       />
 

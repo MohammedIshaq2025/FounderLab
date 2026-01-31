@@ -9,6 +9,44 @@ import DocumentPreview from './DocumentPreview';
 import { ArrowLeft, FileText, Check, Lightbulb, GitBranch, Network, FileText as FileTextIcon, Download, MessageSquare, File, User, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+/**
+ * Fix edge handles for known node types.
+ * This ensures existing projects with incorrect edge data are corrected on load.
+ */
+function fixEdgeHandles(canvasState) {
+  if (!canvasState?.edges) return canvasState;
+
+  const fixedEdges = canvasState.edges.map((edge) => {
+    // Fix system-map -> security edge
+    if (edge.source === 'system-map' && edge.target === 'security') {
+      return {
+        ...edge,
+        sourceHandle: 'right',
+        targetHandle: 'left',
+      };
+    }
+    // Fix root -> system-map edge
+    if (edge.source === 'root' && edge.target === 'system-map') {
+      return {
+        ...edge,
+        sourceHandle: 'top',
+        targetHandle: 'bottom',
+      };
+    }
+    // Fix root -> ui-design edge
+    if (edge.source === 'root' && edge.target === 'ui-design') {
+      return {
+        ...edge,
+        sourceHandle: 'left',
+        targetHandle: 'right',
+      };
+    }
+    return edge;
+  });
+
+  return { ...canvasState, edges: fixedEdges };
+}
+
 function ChatWorkspace({ projects, onUpdateProject }) {
   const { projectId } = useParams();
   const navigate = useNavigate();
@@ -169,7 +207,8 @@ function ChatWorkspace({ projects, onUpdateProject }) {
       if (project.canvas_state) {
         try {
           const canvas = JSON.parse(project.canvas_state);
-          setCanvasState(canvas);
+          // Fix edge handles for existing projects with incorrect data
+          setCanvasState(fixEdgeHandles(canvas));
         } catch (e) {
           console.error('Error parsing canvas state:', e);
         }
@@ -231,7 +270,10 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                 created_at: new Date().toISOString(),
               };
               setMessages(prev => [...prev, step5AiMessage]);
-              if (step5Response.data.canvas_updates?.length > 0) {
+              // Handle Step 5 canvas updates - prefer canvas_state if provided
+              if (step5Response.data.canvas_state) {
+                setCanvasState(step5Response.data.canvas_state);
+              } else if (step5Response.data.canvas_updates?.length > 0) {
                 setCanvasState(prev => {
                   let newNodes = [...prev.nodes];
                   let newEdges = [...prev.edges];
@@ -247,7 +289,18 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                         data: node.data,
                       });
                       if (node.parentId) {
-                        const sourceHandle = node.id === 'ui-design' ? 'left' : 'bottom';
+                        // Determine correct handle positions based on node type
+                        let sourceHandle = 'bottom';
+                        let targetHandle = null;
+
+                        if (node.id === 'ui-design') {
+                          sourceHandle = 'left';
+                          targetHandle = 'right';
+                        } else if (node.id === 'security') {
+                          sourceHandle = 'right';
+                          targetHandle = 'left';
+                        }
+
                         const edge = {
                           id: `${node.parentId}-${node.id}`,
                           source: node.parentId,
@@ -257,8 +310,8 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                           animated: false,
                           style: { stroke: '#D6D3D1', strokeWidth: 1.5 },
                         };
-                        if (node.id === 'ui-design') {
-                          edge.targetHandle = 'right';
+                        if (targetHandle) {
+                          edge.targetHandle = targetHandle;
                         }
                         newEdges.push(edge);
                       }
@@ -548,20 +601,20 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                 }
               }
 
-              // Handle competitors node positioning — 432px to the right of ideation
+              // Handle competitors node positioning — 432px to the right of ideation, 24px higher
               if (normalizedType === 'competitors') {
                 const ideationNode = newNodes.find((n) => n.id === 'ideation');
                 if (ideationNode) {
                   position = {
                     x: ideationNode.position.x + 432,
-                    y: ideationNode.position.y,
+                    y: ideationNode.position.y - 24,
                   };
                 } else {
                   // Fallback position if ideation doesn't exist yet
                   const rootNode = newNodes.find((n) => n.id === 'root');
                   position = {
                     x: (rootNode?.position?.x || 400) + 318 + 432,
-                    y: (rootNode?.position?.y || 300) - 192,
+                    y: (rootNode?.position?.y || 300) - 216,
                   };
                 }
               }
@@ -692,8 +745,12 @@ function ChatWorkspace({ projects, onUpdateProject }) {
             };
             setMessages(prev => [...prev, step5AiMessage]);
 
-            // Handle Step 5 canvas updates
-            if (step5Response.data.canvas_updates?.length > 0) {
+            // Handle Step 5 canvas updates - prefer canvas_state if provided
+            if (step5Response.data.canvas_state) {
+              // Backend provided full canvas_state with correct edges — use it directly
+              setCanvasState(step5Response.data.canvas_state);
+            } else if (step5Response.data.canvas_updates?.length > 0) {
+              // Fallback: process canvas_updates locally
               setCanvasState(prev => {
                 let newNodes = [...prev.nodes];
                 let newEdges = [...prev.edges];
@@ -712,7 +769,18 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                     });
 
                     if (node.parentId) {
-                      const sourceHandle = node.id === 'ui-design' ? 'left' : 'bottom';
+                      // Determine correct handle positions based on node type
+                      let sourceHandle = 'bottom';
+                      let targetHandle = null;
+
+                      if (node.id === 'ui-design') {
+                        sourceHandle = 'left';
+                        targetHandle = 'right';
+                      } else if (node.id === 'security') {
+                        sourceHandle = 'right';
+                        targetHandle = 'left';
+                      }
+
                       const edge = {
                         id: `${node.parentId}-${node.id}`,
                         source: node.parentId,
@@ -722,8 +790,8 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                         animated: false,
                         style: { stroke: '#D6D3D1', strokeWidth: 1.5 },
                       };
-                      if (node.id === 'ui-design') {
-                        edge.targetHandle = 'right';
+                      if (targetHandle) {
+                        edge.targetHandle = targetHandle;
                       }
                       newEdges.push(edge);
                     }
@@ -790,20 +858,20 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                   }
                 }
 
-                // Handle competitors node positioning — 432px to the right of ideation
+                // Handle competitors node positioning — 432px to the right of ideation, 24px higher
                 if (normalizedType === 'competitors') {
                   const ideationNode = newNodes.find((n) => n.id === 'ideation');
                   if (ideationNode) {
                     position = {
                       x: ideationNode.position.x + 432,
-                      y: ideationNode.position.y,
+                      y: ideationNode.position.y - 24,
                     };
                   } else {
                     // Fallback position if ideation doesn't exist yet
                     const rootNode = newNodes.find((n) => n.id === 'root');
                     position = {
                       x: (rootNode?.position?.x || 400) + 318 + 432,
-                      y: (rootNode?.position?.y || 300) - 192,
+                      y: (rootNode?.position?.y || 300) - 216,
                     };
                   }
                 }
@@ -834,8 +902,10 @@ function ChatWorkspace({ projects, onUpdateProject }) {
 
                 if (node.parentId) {
                   const isUserFlowEdge = normalizedType === 'userFlow';
+                  // Determine source handle based on node type
                   const sourceHandle = node.id === 'ui-design' ? 'left'
                     : node.id === 'system-map' ? 'top'
+                    : node.id === 'security' ? 'right'  // system-map right handle → security left
                     : 'bottom';
                   const edge = {
                     id: `${node.parentId}-${node.id}`,
@@ -853,6 +923,9 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                   }
                   if (node.id === 'system-map') {
                     edge.targetHandle = 'bottom';
+                  }
+                  if (node.id === 'security') {
+                    edge.targetHandle = 'left';
                   }
                   newEdges.push(edge);
                 }
