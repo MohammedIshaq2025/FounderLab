@@ -1418,7 +1418,7 @@ function SecurityNode({ data }) {
     }
     const filtered = items
       .filter((item) => item && typeof item === 'object' && item.item)
-      .slice(0, 3)
+      .slice(0, 5)
       .map((item) => ({
         text: item.item,
         priority: item.priority === 'critical' ? 'critical' : 'high',

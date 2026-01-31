@@ -968,10 +968,10 @@ def generate_security_checklist(phase_summaries: Dict, tech_stack: Dict, complem
 RULES:
 1. Analyze the features to identify security-sensitive areas (authentication, file uploads, payments, PII storage, APIs, etc.)
 2. Generate security requirements SPECIFIC to this project's features and tech stack
-3. Each category (frontend, backend, database) should have 2-3 items
+3. Each category (frontend, backend, database) should have 4-5 items
 4. Each item must be concise (under 8 words) and actionable
 5. Priority is either "critical" (must-have before launch) or "high" (should-have before launch)
-6. At least 1 item per category should be "critical"
+6. At least 2 items per category should be "critical"
 
 Return JSON with exactly this shape:
 {{"frontend": [{{"item": "...", "priority": "critical|high"}}], "backend": [{{"item": "...", "priority": "critical|high"}}], "database": [{{"item": "...", "priority": "critical|high"}}]}}"""
@@ -981,15 +981,21 @@ Return JSON with exactly this shape:
         return {
             "frontend": [
                 {"item": "Input validation on all forms", "priority": "critical"},
-                {"item": "XSS prevention via sanitization", "priority": "high"}
+                {"item": "XSS prevention via sanitization", "priority": "critical"},
+                {"item": "CSRF token protection", "priority": "high"},
+                {"item": "Secure cookie handling", "priority": "high"}
             ],
             "backend": [
                 {"item": "Rate limiting on auth endpoints", "priority": "critical"},
-                {"item": "Secure token handling", "priority": "high"}
+                {"item": "Secure token handling", "priority": "critical"},
+                {"item": "Input sanitization", "priority": "high"},
+                {"item": "Request payload validation", "priority": "high"}
             ],
             "database": [
                 {"item": "Row Level Security enabled", "priority": "critical"},
-                {"item": "Encrypted connections", "priority": "high"}
+                {"item": "Encrypted connections", "priority": "critical"},
+                {"item": "Parameterized queries only", "priority": "high"},
+                {"item": "Regular backup strategy", "priority": "high"}
             ]
         }
 
@@ -1002,7 +1008,7 @@ Return JSON with exactly this shape:
                 {"role": "user", "content": prompt}
             ],
             temperature=0.4,
-            max_tokens=600,
+            max_tokens=800,
             timeout=30,  # 30 second timeout
             response_format={"type": "json_object"}
         )
@@ -1031,7 +1037,7 @@ Return JSON with exactly this shape:
                     validated_items.append(item)
 
             # Limit to 3 items per category
-            result[category] = validated_items[:3]
+            result[category] = validated_items[:5]
 
         # Ensure each category has at least 1 item, otherwise use fallback items
         fallback = get_fallback()
@@ -1610,7 +1616,7 @@ Return as JSON: {{"guidelines": ["Guideline 1", "Guideline 2", "Guideline 3"]}}"
 
         # Security node — positioned to the RIGHT of System Map (same Y, ideation X)
         sec_x = root_x + 318  # Same X as ideation
-        sec_y = root_y - 520  # Same Y as system map
+        sec_y = root_y - 600  # 80px above system map
 
         canvas_updates.append({
             "action": "add_node",
