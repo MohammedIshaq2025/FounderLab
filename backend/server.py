@@ -214,7 +214,12 @@ Your response text should say "Adding [Feature Name] to your canvas..." AND ALSO
 {"action": "add_node", "node": {"id": "userflow-N", "type": "userFlow", "data": {"parentFeatureId": "feature-N", "steps": [{"action": "User clicks button", "actor": "user"}, {"action": "System shows modal", "actor": "system"}, {"action": "User enters data", "actor": "user"}, {"action": "System validates and saves", "actor": "system"}, {"action": "User sees confirmation", "actor": "user"}]}, "parentId": "feature-N"}}
 [/UPDATE_CANVAS]
 
-Use type "featureGroup" (NOT "feature") for feature nodes with sub-entries. Increment N for each feature (feature-1, feature-2, etc.).
+IMPORTANT TYPE VALUES:
+- Feature node: type MUST be exactly "featureGroup" (camelCase, NOT "feature" or "FeatureGroup")
+- User flow node: type MUST be exactly "userFlow" (camelCase, NOT "featureGroup" or "userflow" or "UserFlow")
+- User flow node ID: MUST start with "userflow-" (e.g., "userflow-1", "userflow-2")
+
+Increment N for each feature (feature-1, feature-2, etc.) and matching userflow (userflow-1, userflow-2, etc.).
 Each sub-feature MUST include a bold-able name followed by a colon and a clear description. Never use vague placeholders like "Sub-feature 1".
 
 USER FLOW RULES (for the userflow-N node):
@@ -1684,11 +1689,37 @@ async def chat(request: ChatRequest, background_tasks: BackgroundTasks, user_id:
                 canvas_json = cleaned_response[start+len("[UPDATE_CANVAS]"):end-len("[/UPDATE_CANVAS]")].strip()
                 canvas_update = json.loads(canvas_json)
 
-                # Validate node type
+                # Validate and normalize node type
                 if canvas_update.get('action') == 'add_node' and 'node' in canvas_update:
-                    node_type = canvas_update['node'].get('type', 'feature')
-                    if node_type not in VALID_NODE_TYPES:
-                        canvas_update['node']['type'] = 'feature'
+                    node = canvas_update['node']
+                    node_id = node.get('id', '')
+                    node_type = node.get('type', 'feature')
+                    node_data = node.get('data', {})
+
+                    # Force userFlow type for nodes that should be userFlow:
+                    # 1. ID contains 'userflow' (case-insensitive)
+                    # 2. Has 'steps' in data (userFlow signature)
+                    # 3. Has 'parentFeatureId' in data (userFlow signature)
+                    # 4. Type is a case variation of 'userflow'
+                    is_userflow_node = (
+                        'userflow' in node_id.lower() or
+                        'steps' in node_data or
+                        'parentFeatureId' in node_data or
+                        node_type.lower().replace('_', '').replace('-', '') == 'userflow'
+                    )
+
+                    if is_userflow_node:
+                        canvas_update['node']['type'] = 'userFlow'
+                    elif node_type not in VALID_NODE_TYPES:
+                        # Handle other case variations
+                        node_type_lower = node_type.lower()
+                        type_mapping = {
+                            'featuregroup': 'featureGroup',
+                            'complementaryfeatures': 'complementaryFeatures',
+                            'uidesign': 'uiDesign',
+                            'systemmap': 'systemMap',
+                        }
+                        canvas_update['node']['type'] = type_mapping.get(node_type_lower, 'feature')
 
                 canvas_updates.append(canvas_update)
 

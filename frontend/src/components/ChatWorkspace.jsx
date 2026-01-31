@@ -515,8 +515,24 @@ function ChatWorkspace({ projects, onUpdateProject }) {
 
               const VALID_NODE_TYPES = new Set(['root', 'default', 'feature', 'tech', 'database', 'ideation', 'featureGroup', 'userFlow', 'complementaryFeatures', 'uiDesign', 'systemMap']);
 
+              // Detect if node should be userFlow (handles AI type errors)
+              const isUserFlowNode = (
+                node.id?.toLowerCase().includes('userflow') ||
+                node.data?.steps ||
+                node.data?.parentFeatureId ||
+                node.type?.toLowerCase().replace(/[_-]/g, '') === 'userflow'
+              );
+
+              // Normalize the node type
+              let normalizedType = node.type;
+              if (isUserFlowNode) {
+                normalizedType = 'userFlow';
+              } else if (!VALID_NODE_TYPES.has(node.type)) {
+                normalizedType = 'feature';
+              }
+
               // Handle userFlow node positioning — directly below parent feature
-              if (node.type === 'userFlow' && node.parentId) {
+              if (normalizedType === 'userFlow' && node.parentId) {
                 const parentNode = newNodes.find((n) => n.id === node.parentId);
                 if (parentNode) {
                   position = {
@@ -530,13 +546,13 @@ function ChatWorkspace({ projects, onUpdateProject }) {
 
               newNodes.push({
                 id: node.id,
-                type: VALID_NODE_TYPES.has(node.type) ? node.type : 'feature',
+                type: normalizedType,
                 position,
                 data: node.data,
               });
 
               if (node.parentId) {
-                const isUserFlowEdge = node.type === 'userFlow';
+                const isUserFlowEdge = normalizedType === 'userFlow';
                 const edge = {
                   id: `${node.parentId}-${node.id}`,
                   source: node.parentId,
@@ -708,8 +724,24 @@ function ChatWorkspace({ projects, onUpdateProject }) {
                 let position = node.position || { x: 400, y: 300 };
                 const VALID_NODE_TYPES = new Set(['root', 'default', 'feature', 'tech', 'database', 'ideation', 'featureGroup', 'userFlow', 'complementaryFeatures', 'uiDesign', 'systemMap']);
 
+                // Detect if node should be userFlow (handles AI type errors)
+                const isUserFlowNode = (
+                  node.id?.toLowerCase().includes('userflow') ||
+                  node.data?.steps ||
+                  node.data?.parentFeatureId ||
+                  node.type?.toLowerCase().replace(/[_-]/g, '') === 'userflow'
+                );
+
+                // Normalize the node type
+                let normalizedType = node.type;
+                if (isUserFlowNode) {
+                  normalizedType = 'userFlow';
+                } else if (!VALID_NODE_TYPES.has(node.type)) {
+                  normalizedType = 'feature';
+                }
+
                 // Handle userFlow node positioning — directly below parent feature
-                if (node.type === 'userFlow' && node.parentId) {
+                if (normalizedType === 'userFlow' && node.parentId) {
                   const parentNode = newNodes.find((n) => n.id === node.parentId);
                   if (parentNode) {
                     position = {
@@ -721,13 +753,13 @@ function ChatWorkspace({ projects, onUpdateProject }) {
 
                 newNodes.push({
                   id: node.id,
-                  type: VALID_NODE_TYPES.has(node.type) ? node.type : 'feature',
+                  type: normalizedType,
                   position,
                   data: node.data,
                 });
 
                 if (node.parentId) {
-                  const isUserFlowEdge = node.type === 'userFlow';
+                  const isUserFlowEdge = normalizedType === 'userFlow';
                   const sourceHandle = node.id === 'ui-design' ? 'left'
                     : node.id === 'system-map' ? 'top'
                     : 'bottom';
